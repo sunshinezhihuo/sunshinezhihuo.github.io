@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MC-SEARCH: 多模态智能搜索基准测试 - 研究生论文讲解</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #1e3a5f;
+            --secondary-color: #2d5a87;
+            --accent-color: #4a90c2;
+            --gold-color: #c9a227;
+            --text-color: #333;
+            --light-bg: #f8f9fa;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'SimSun', serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            min-height: 100vh;
+        }
+
+        /* 导航栏 */
+        .navbar {
+            background: rgba(30, 58, 95, 0.95);
+            backdrop-filter: blur(10px);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+        }
+
+        .navbar-logo {
+            color: white;
+            font-size: 1.3rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+        }
+
+        .navbar-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .navbar-links a {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .navbar-links a:hover {
+            color: var(--gold-color);
+        }
+
+        .navbar-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--gold-color);
+            transition: width 0.3s ease;
+        }
+
+        .navbar-links a:hover::after {
+            width: 100%;
+        }
+
+        /* Hero区域 */
+        .hero {
+            padding: 120px 2rem 80px;
+            text-align: center;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            animation: backgroundMove 20s linear infinite;
+        }
+
+        @keyframes backgroundMove {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(60px); }
+        }
+
+        .hero-title {
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            animation: fadeInUp 1s ease-out;
+            position: relative;
+        }
+
+        .hero-subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            animation: fadeInUp 1s ease-out 0.2s both;
+            position: relative;
+        }
+
+        .hero-author {
+            color: var(--gold-color);
+            font-size: 1rem;
+            margin-bottom: 3rem;
+            animation: fadeInUp 1s ease-out 0.4s both;
+            position: relative;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            animation: fadeInUp 1s ease-out 0.6s both;
+            position: relative;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: var(--gold-color);
+            color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(201, 162, 39, 0.4);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: white;
+            transform: translateY(-3px);
+        }
+
+        /* 动画数字 */
+        .stats-section {
+            padding: 60px 2rem;
+            background: white;
+        }
+
+        .stats-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.95rem;
+            color: #666;
+        }
+
+        /* 特色区域 */
+        .features-section {
+            padding: 80px 2rem;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+        }
+
+        .features-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: var(--gold-color);
+            border-radius: 2px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border-top: 4px solid var(--accent-color);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        .feature-title {
+            font-size: 1.25rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .feature-description {
+            color: #666;
+            font-size: 0.95rem;
+            line-height: 1.8;
+        }
+
+        /* PPT导航卡片 */
+        .ppt-section {
+            padding: 80px 2rem;
+            background: white;
+        }
+
+        .ppt-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .ppt-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .ppt-card {
+            background: linear-gradient(135deg, white 0%, #f8f9fa 100%);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border: 1px solid #e9ecef;
+        }
+
+        .ppt-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .ppt-card-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .ppt-card-header::before {
+            content: 'PPT';
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.1);
+            padding: 3px 10px;
+            border-radius: 10px;
+        }
+
+        .ppt-number {
+            width: 50px;
+            height: 50px;
+            background: var(--gold-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .ppt-title {
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .ppt-card-body {
+            padding: 1.5rem;
+        }
+
+        .ppt-description {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .ppt-link {
+            display: inline-flex;
+            align-items: center;
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .ppt-link:hover {
+            color: var(--primary-color);
+        }
+
+        .ppt-link::after {
+            content: '→';
+            margin-left: 5px;
+            transition: transform 0.3s ease;
+        }
+
+        .ppt-link:hover::after {
+            transform: translateX(5px);
+        }
+
+        /* 页脚 */
+        .footer {
+            background: var(--primary-color);
+            color: white;
+            padding: 40px 2rem;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .footer-title {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: var(--gold-color);
+        }
+
+        .footer-text {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+        }
+
+        /* 滚动动画 */
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+
+        .animate-on-scroll.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 1.8rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1rem;
+            }
+
+            .navbar-links {
+                gap: 1rem;
+            }
+
+            .navbar-links a {
+                font-size: 0.85rem;
+            }
+
+            .stats-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .features-grid, .ppt-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="navbar-logo">MC-SEARCH</div>
+            <div class="navbar-links">
+                <a href="#home">首页</a>
+                <a href="#features">研究亮点</a>
+                <a href="#ppt">PPT课件</a>
+                <a href="#about">关于</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero区域 -->
+    <section id="home" class="hero">
+        <h1 class="hero-title">MC-SEARCH</h1>
+        <p class="hero-subtitle">EVALUATING AND ENHANCING MULTI-MODAL AGENTIC SEARCH WITH STRUCTURED LONG REASONING CHAINS</p>
+        <p class="hero-author">Xuying Ning et al. | ICLR 2026</p>
+        <div class="hero-buttons">
+            <a href="ppt1.html" class="btn btn-primary">开始学习</a>
+            <a href="#ppt" class="btn btn-secondary">浏览课件</a>
+        </div>
+    </section>
+
+    <!-- 统计数据 -->
+    <section class="stats-section">
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-number" id="stat1">3,333</div>
+                <div class="stat-label">高质量样本</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="stat2">3.7</div>
+                <div class="stat-label">平均推理步数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="stat3">5</div>
+                <div class="stat-label">推理结构类型</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="stat4">6</div>
+                <div class="stat-label">评估模型</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 研究亮点 -->
+    <section id="features" class="features-section">
+        <div class="features-container">
+            <h2 class="section-title">研究亮点</h2>
+            <div class="features-grid">
+                <div class="feature-card animate-on-scroll">
+                    <div class="feature-icon">📊</div>
+                    <h3 class="feature-title">首个多模态Agentic RAG基准</h3>
+                    <p class="feature-description">MC-SEARCH是第一个针对多模态智能体检索增强生成的基准测试，涵盖五种代表性推理结构，支持细粒度的过程级评估。</p>
+                </div>
+                <div class="feature-card animate-on-scroll">
+                    <div class="feature-icon">🔍</div>
+                    <h3 class="feature-title">HAVE验证机制</h3>
+                    <p class="feature-description">通过Hop-wise Attribution and Verification of Evidence (HAVE)机制确保推理链的必要性和非冗余性，生成高质量标注数据。</p>
+                </div>
+                <div class="feature-card animate-on-scroll">
+                    <div class="feature-icon">⚡</div>
+                    <h3 class="feature-title">SEARCH-ALIGN框架</h3>
+                    <p class="feature-description">基于验证推理链的过程监督微调框架，有效提升开源模型的规划和检索能力。</p>
+                </div>
+                <div class="feature-card animate-on-scroll">
+                    <div class="feature-icon">📈</div>
+                    <h3 class="feature-title">过程级评估指标</h3>
+                    <p class="feature-description">引入Hit per Step (HPS)和Rollout Deviation (RD)等新指标，超越传统答案准确率评估。</p>
+                </div>
+                <div class="feature-card animate-on-scroll">
+                    <div class="feature-icon">🤖</div>
+                    <h3 class="feature-title">统一Agentic管道</h3>
+                    <p class="feature-description">开发统一的多模态智能体RAG管道，实现公平的基准测试和广泛的实验评估。</p>
+                </div>
+                <div class="feature-card animate-on-scroll">
+                    <div class="feature-icon">💡</div>
+                    <h3 class="feature-title">深入错误分析</h3>
+                    <p class="feature-description">识别八种典型错误类型，揭示当前模型在检索规划和多模态对齐方面的关键瓶颈。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PPT导航 -->
+    <section id="ppt" class="ppt-section">
+        <div class="ppt-container">
+            <h2 class="section-title">PPT课件导航</h2>
+            <div class="ppt-grid">
+                <a href="ppt1.html" class="ppt-card">
+                    <div class="ppt-card-header">
+                        <div class="ppt-number">01</div>
+                        <div class="ppt-title">论文概述</div>
+                    </div>
+                    <div class="ppt-card-body">
+                        <p class="ppt-description">论文标题、作者信息、摘要和研究背景介绍</p>
+                        <span class="ppt-link">查看详情</span>
+                    </div>
+                </a>
+                <a href="ppt2.html" class="ppt-card">
+                    <div class="ppt-card-header">
+                        <div class="ppt-number">02</div>
+                        <div class="ppt-title">MC-SEARCH基准构建</div>
+                    </div>
+                    <div class="ppt-card-body">
+                        <p class="ppt-description">五种推理拓扑结构、数据生成和HAVE过滤机制</p>
+                        <span class="ppt-link">查看详情</span>
+                    </div>
+                </a>
+                <a href="ppt3.html" class="ppt-card">
+                    <div class="ppt-card-header">
+                        <div class="ppt-number">03</div>
+                        <div class="ppt-title">评估协议与管道</div>
+                    </div>
+                    <div class="ppt-card-body">
+                        <p class="ppt-description">过程级评估指标和统一的Agentic MM-RAG管道设计</p>
+                        <span class="ppt-link">查看详情</span>
+                    </div>
+                </a>
+                <a href="ppt4.html" class="ppt-card">
+                    <div class="ppt-card-header">
+                        <div class="ppt-number">04</div>
+                        <div class="ppt-title">实验结果分析</div>
+                    </div>
+                    <div class="ppt-card-body">
+                        <p class="ppt-description">六种MLLM模型的基准测试结果和SEARCH-ALIGN效果</p>
+                        <span class="ppt-link">查看详情</span>
+                    </div>
+                </a>
+                <a href="ppt5.html" class="ppt-card">
+                    <div class="ppt-card-header">
+                        <div class="ppt-number">05</div>
+                        <div class="ppt-title">深入分析</div>
+                    </div>
+                    <div class="ppt-card-body">
+                        <p class="ppt-description">推理链长度、过度/不足检索、模态偏好和错误类型分析</p>
+                        <span class="ppt-link">查看详情</span>
+                    </div>
+                </a>
+                <a href="ppt6.html" class="ppt-card">
+                    <div class="ppt-card-header">
+                        <div class="ppt-number">06</div>
+                        <div class="ppt-title">结论与展望</div>
+                    </div>
+                    <div class="ppt-card-body">
+                        <p class="ppt-description">研究总结、贡献归纳和未来研究方向</p>
+                        <span class="ppt-link">查看详情</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer id="about" class="footer">
+        <div class="footer-content">
+            <h3 class="footer-title">MC-SEARCH Research Project</h3>
+            <p class="footer-text">University of Illinois Urbana-Champaign | ICLR 2026</p>
+            <p class="footer-text" style="margin-top: 10px; font-size: 0.8rem;">本网页仅供研究生论文讲解学习使用</p>
+        </div>
+    </footer>
+
+    <script>
+        // 数字动画
+        function animateNumbers() {
+            const stats = document.querySelectorAll('.stat-number');
+            stats.forEach((stat, index) => {
+                const target = parseFloat(stat.textContent.replace(/,/g, ''));
+                const duration = 2000;
+                const startTime = performance.now();
+                
+                function update(currentTime) {
+                    const elapsed = currentTime - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    const easeOut = 1 - Math.pow(1 - progress, 3);
+                    const current = target * easeOut;
+                    
+                    if (stat.id === 'stat2') {
+                        stat.textContent = current.toFixed(1);
+                    } else {
+                        stat.textContent = Math.floor(current).toLocaleString();
+                    }
+                    
+                    if (progress < 1) {
+                        requestAnimationFrame(update);
+                    }
+                }
+                
+                setTimeout(() => {
+                    requestAnimationFrame(update);
+                }, index * 200);
+            });
+        }
+
+        // 滚动动画
+        function handleScroll() {
+            const elements = document.querySelectorAll('.animate-on-scroll');
+            elements.forEach(element => {
+                const rect = element.getBoundingClientRect();
+                const windowHeight = window.innerHeight;
+                if (rect.top < windowHeight * 0.85) {
+                    element.classList.add('visible');
+                }
+            });
+        }
+
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', () => {
+            animateNumbers();
+            handleScroll();
+            window.addEventListener('scroll', handleScroll);
+        });
+    </script>
+</body>
+</html>

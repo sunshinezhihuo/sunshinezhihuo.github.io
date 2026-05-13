@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PPT5: 深入分析</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #1e3a5f;
+            --secondary-color: #2d5a87;
+            --accent-color: #4a90c2;
+            --gold-color: #c9a227;
+            --text-color: #333;
+            --light-bg: #f8f9fa;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'SimSun', serif;
+            line-height: 1.8;
+            color: var(--text-color);
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            min-height: 100vh;
+        }
+
+        /* 导航栏 */
+        .navbar {
+            background: rgba(30, 58, 95, 0.95);
+            backdrop-filter: blur(10px);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+        }
+
+        .navbar-logo {
+            color: white;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .navbar-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .navbar-links a {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.3s ease;
+        }
+
+        .navbar-links a:hover {
+            color: var(--gold-color);
+        }
+
+        /* 内容区域 */
+        .content {
+            padding: 100px 2rem 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* PPT幻灯片样式 */
+        .slide {
+            background: white;
+            border-radius: 20px;
+            padding: 4rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 通用幻灯片标题 */
+        .slide-title {
+            font-size: 1.8rem;
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 3px solid var(--gold-color);
+            position: relative;
+        }
+
+        .slide-title::before {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: var(--primary-color);
+        }
+
+        /* 链长度分析 */
+        .chain-length-container {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 2rem;
+            border-radius: 12px;
+            margin-top: 2rem;
+        }
+
+        .chain-chart {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            height: 200px;
+            padding: 1rem;
+        }
+
+        .chain-bar {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .chain-bar .bar-fill {
+            width: 80px;
+            background: linear-gradient(180deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            border-radius: 5px 5px 0 0;
+        }
+
+        .chain-bar .bar-label {
+            font-size: 0.9rem;
+            color: #555;
+            font-weight: 600;
+        }
+
+        .chain-bar .bar-value {
+            font-size: 0.85rem;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        /* 检索分析 */
+        .retrieval-analysis {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .analysis-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .analysis-card h4 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .analysis-card .icon {
+            font-size: 1.2rem;
+        }
+
+        .analysis-card p {
+            font-size: 0.9rem;
+            color: #555;
+            line-height: 1.7;
+        }
+
+        .analysis-card .highlight {
+            color: var(--gold-color);
+            font-weight: 600;
+        }
+
+        /* 模态覆盖表格 */
+        .modality-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 2rem;
+        }
+
+        .modality-table th, .modality-table td {
+            padding: 1rem;
+            text-align: center;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .modality-table th {
+            background: var(--primary-color);
+            color: white;
+            font-weight: 600;
+        }
+
+        .modality-table .high {
+            background: #e8f5e9;
+            color: #2e7d32;
+            font-weight: 600;
+        }
+
+        .modality-table .low {
+            background: #ffebee;
+            color: #c62828;
+            font-weight: 600;
+        }
+
+        /* 错误类型分布 */
+        .error-distribution {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 2rem;
+            border-radius: 12px;
+            margin-top: 2rem;
+        }
+
+        .error-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .error-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .error-item .percentage {
+            width: 80px;
+            height: 30px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .error-item .bar-container {
+            flex: 1;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .error-item .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color) 0%, var(--gold-color) 100%);
+            border-radius: 10px;
+        }
+
+        .error-item .error-name {
+            width: 200px;
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        /* 关键洞察 */
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .insight-card {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-top: 4px solid var(--gold-color);
+        }
+
+        .insight-card h4 {
+            color: var(--primary-color);
+            margin-bottom: 0.8rem;
+            font-size: 1.1rem;
+        }
+
+        .insight-card p {
+            font-size: 0.9rem;
+            color: #555;
+            line-height: 1.7;
+        }
+
+        /* 分页导航 */
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2rem 0;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .pagination-btn {
+            background: var(--primary-color);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pagination-btn:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(30, 58, 95, 0.3);
+        }
+
+        .pagination-info {
+            font-size: 0.95rem;
+            color: #666;
+        }
+
+        /* 进度条 */
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #e9ecef;
+            border-radius: 2px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color) 0%, var(--gold-color) 100%);
+            border-radius: 2px;
+            transition: width 0.5s ease;
+            width: 83.33%;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .slide {
+                padding: 2rem 1.5rem;
+            }
+
+            .slide-title {
+                font-size: 1.4rem;
+            }
+
+            .chain-chart {
+                flex-wrap: wrap;
+                height: auto;
+            }
+
+            .chain-bar {
+                margin-bottom: 1rem;
+            }
+
+            .retrieval-analysis, .insights-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modality-table {
+                font-size: 0.85rem;
+            }
+
+            .modality-table th, .modality-table td {
+                padding: 0.7rem 0.5rem;
+            }
+
+            .error-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .error-item .error-name {
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+
+            .pagination {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="navbar-logo">MC-SEARCH</div>
+            <div class="navbar-links">
+                <a href="index.html">首页</a>
+                <a href="ppt1.html">PPT1</a>
+                <a href="ppt2.html">PPT2</a>
+                <a href="ppt3.html">PPT3</a>
+                <a href="ppt4.html">PPT4</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 内容区域 -->
+    <div class="content">
+        <!-- 进度条 -->
+        <div class="progress-bar">
+            <div class="progress-fill"></div>
+        </div>
+
+        <!-- 幻灯片1: 推理链长度分析 -->
+        <div class="slide">
+            <h2 class="slide-title">推理链长度分析 (RQ2)</h2>
+            <p style="font-size: 1rem; color: #555; margin-bottom: 1.5rem;">
+                随着推理链长度的增加，所有模型的性能都呈现下降趋势。
+            </p>
+            <div class="chain-length-container">
+                <div class="chain-chart">
+                    <div class="chain-bar">
+                        <div class="bar-value">0.40</div>
+                        <div class="bar-fill" style="height: 100px;"></div>
+                        <div class="bar-label">1 Hop</div>
+                    </div>
+                    <div class="chain-bar">
+                        <div class="bar-value">0.35</div>
+                        <div class="bar-fill" style="height: 87.5px;"></div>
+                        <div class="bar-label">2 Hop</div>
+                    </div>
+                    <div class="chain-bar">
+                        <div class="bar-value">0.30</div>
+                        <div class="bar-fill" style="height: 75px;"></div>
+                        <div class="bar-label">3 Hop</div>
+                    </div>
+                    <div class="chain-bar">
+                        <div class="bar-value">0.22</div>
+                        <div class="bar-fill" style="height: 55px;"></div>
+                        <div class="bar-label">4 Hop</div>
+                    </div>
+                    <div class="chain-bar">
+                        <div class="bar-value">0.15</div>
+                        <div class="bar-fill" style="height: 37.5px;"></div>
+                        <div class="bar-label">5 Hop</div>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top: 2rem; padding: 1.5rem; background: #fff3e0; border-radius: 10px;">
+                <h4 style="color: var(--primary-color); margin-bottom: 0.5rem;">💡 关键发现</h4>
+                <p style="font-size: 0.95rem; color: #555;">
+                    模型在短推理链(1-3 hops)上表现相对稳健，但当链长度扩展到4或5 hops时，所有模型都经历了性能急剧下降。这反映了长视野推理中复合错误和不稳定规划的挑战。
+                </p>
+            </div>
+        </div>
+
+        <!-- 幻灯片2: 过度/不足检索分析 -->
+        <div class="slide">
+            <h2 class="slide-title">过度/不足检索分析 (RQ3)</h2>
+            <p style="font-size: 1rem; color: #555; margin-bottom: 1.5rem;">
+                分析模型的检索行为，比较预测推理链长度与黄金推理链长度的差异(∆Step)。
+            </p>
+            <div class="retrieval-analysis">
+                <div class="analysis-card">
+                    <h4><span class="icon">📉</span>严重不足检索</h4>
+                    <p>当模型严重不足检索时(<span class="highlight">∆Step < -2</span>)，性能急剧下降，因为关键证据被跳过，造成后续推理无法恢复的缺口。</p>
+                </div>
+                <div class="analysis-card">
+                    <h4><span class="icon">⚖️</span>适度过度检索</h4>
+                    <p>适度的过度检索(<span class="highlight">∆Step = 1-2</span>)通常能提高准确率，表明一两个额外步骤有助于从不完善的规划中恢复。</p>
+                </div>
+                <div class="analysis-card">
+                    <h4><span class="icon">📈</span>严重过度检索</h4>
+                    <p>当过度检索严重时(<span class="highlight">∆Step ≥ 4</span>)，噪声和无关上下文导致所有模型性能急剧下降。</p>
+                </div>
+                <div class="analysis-card">
+                    <h4><span class="icon">🎯</span>最佳平衡点</h4>
+                    <p>Gemini-2.5-Pro对过度检索最具弹性，而Claude-3.7-Sonnet和GPT-4o-Mini则非常脆弱。这凸显了捕获足够证据与避免过度检索之间的核心张力。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 幻灯片3: 模态偏好分析 -->
+        <div class="slide">
+            <h2 class="slide-title">模态覆盖分析 (RQ4)</h2>
+            <p style="font-size: 1rem; color: #555; margin-bottom: 1.5rem;">
+                分析模型在不同查询类型下的模态检索覆盖情况。
+            </p>
+            <table class="modality-table">
+                <thead>
+                    <tr>
+                        <th>查询类型</th>
+                        <th>模态</th>
+                        <th>Gemini-2.5-Pro</th>
+                        <th>InternVL-3.5-8B</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td rowspan="2">含图像查询</td>
+                        <td>图像</td>
+                        <td class="high">87.35%</td>
+                        <td class="high">63.84%</td>
+                    </tr>
+                    <tr>
+                        <td>文本</td>
+                        <td class="high">78.61%</td>
+                        <td class="high">82.67%</td>
+                    </tr>
+                    <tr>
+                        <td rowspan="2">无图像查询</td>
+                        <td>图像</td>
+                        <td class="low">29.50%</td>
+                        <td class="low">0.66%</td>
+                    </tr>
+                    <tr>
+                        <td>文本</td>
+                        <td class="high">83.55%</td>
+                        <td class="high">89.78%</td>
+                    </tr>
+                    <tr>
+                        <td rowspan="2">总体</td>
+                        <td>图像</td>
+                        <td class="high">64.27%</td>
+                        <td>33.69%</td>
+                    </tr>
+                    <tr>
+                        <td>文本</td>
+                        <td class="high">80.48%</td>
+                        <td class="high">85.96%</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div style="margin-top: 1.5rem; padding: 1.5rem; background: #e3f2fd; border-radius: 10px;">
+                <h4 style="color: var(--primary-color); margin-bottom: 0.5rem;">🔍 重要发现</h4>
+                <p style="font-size: 0.95rem; color: #555;">
+                    模型在所有设置下保持强大的文本覆盖(>78%)，但图像覆盖远弱且高度依赖显式图像输入。当没有显式图像提示时，模型倾向于默认文本检索，失去视觉基础。这揭示了明显的<strong>模态差距</strong>。
+                </p>
+            </div>
+        </div>
+
+        <!-- 幻灯片4: 错误类型分析 -->
+        <div class="slide">
+            <h2 class="slide-title">错误类型分析 (RQ5)</h2>
+            <p style="font-size: 1rem; color: #555; margin-bottom: 1.5rem;">
+                八种错误类型的分布，由Gemini-2.5-Pro标注判断。
+            </p>
+            <div class="error-distribution">
+                <div class="error-list">
+                    <div class="error-item">
+                        <div class="percentage">84.7%</div>
+                        <div class="bar-container">
+                            <div class="bar-fill" style="width: 84.7%;"></div>
+                        </div>
+                        <div class="error-name">Retrieval-Failure</div>
+                    </div>
+                    <div class="error-item">
+                        <div class="percentage">75.8%</div>
+                        <div class="bar-container">
+                            <div class="bar-fill" style="width: 75.8%;"></div>
+                        </div>
+                        <div class="error-name">Hallucinated-Entity/Attribute</div>
+                    </div>
+                    <div class="error-item">
+                        <div class="percentage">74.3%</div>
+                        <div class="bar-container">
+                            <div class="bar-fill" style="width: 74.3%;"></div>
+                        </div>
+                        <div class="error-name">Step-Omission</div>
+                    </div>
+                    <div class="error-item">
+                        <div class="percentage">33.5%</div>
+                        <div class="bar-container">
+                            <div class="bar-fill" style="width: 33.5%;"></div>
+                        </div>
+                        <div class="error-name">Modality-Mismatch</div>
+                    </div>
+                    <div class="error-item">
+                        <div class="percentage">24.4%</div>
+                        <div class="bar-container">
+                            <div class="bar-fill" style="width: 24.4%;"></div>
+                        </div>
+                        <div class="error-name">Spurious-Steps</div>
+                    </div>
+                    <div class="error-item">
+                        <div class="percentage">19.4%</div>
+                        <div class="bar-container">
+                            <div class="bar-fill" style="width: 19.4%;"></div>
+                        </div>
+                        <div class="error-name">Order/Dependency-Error</div>
+                    </div>
+                    <div class="error-item">
+                        <div class="percentage">12.1%</div>
+                        <div class="bar-container">
+                            <div class="bar-fill" style="width: 12.1%;"></div>
+                        </div>
+                        <div class="error-name">Multi-Hop-Integration-Fail</div>
+                    </div>
+                    <div class="error-item">
+                        <div class="percentage">8.4%</div>
+                        <div class="bar-container">
+                            <div class="bar-fill" style="width: 8.4%;"></div>
+                        </div>
+                        <div class="error-name">Evidence-Misinterpretation</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 幻灯片5: 深入分析总结 -->
+        <div class="slide">
+            <h2 class="slide-title">深入分析总结</h2>
+            <div class="insights-grid">
+                <div class="insight-card">
+                    <h4>🔗 链长度影响</h4>
+                    <p>模型在短链上表现稳健，但4-5 hops时长链性能急剧下降，复合错误和不稳定规划是主要原因。</p>
+                </div>
+                <div class="insight-card">
+                    <h4>⚖️ 检索平衡</h4>
+                    <p>适度过度检索(1-2步)有益，但严重过度检索(≥4步)会导致性能急剧下降，噪声和无关上下文是主要问题。</p>
+                </div>
+                <div class="insight-card">
+                    <h4>🎯 模态偏好</h4>
+                    <p>模型倾向于文本检索，缺乏显式图像提示时图像覆盖大幅下降，存在明显的模态差距。</p>
+                </div>
+                <div class="insight-card">
+                    <h4>💡 主要瓶颈</h4>
+                    <p>检索准确性(模态感知检索、充分规划/步骤覆盖、校准停止)是可靠链级推理的核心瓶颈。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 分页导航 -->
+    <div class="pagination">
+        <a href="ppt4.html" class="pagination-btn">
+            <span>←</span>
+            <span>上一页</span>
+        </a>
+        <span class="pagination-info">PPT 5/6 - 深入分析</span>
+        <a href="ppt6.html" class="pagination-btn">
+            <span>下一页</span>
+            <span>→</span>
+        </a>
+    </div>
+</body>
+</html>

@@ -1,0 +1,1908 @@
+PDF文档 - 总共 35 页
+============================================================
+
+============================================================
+第 1 页
+============================================================
+PublishedasaconferencepaperatICLR2026
+MC-SEARCH: EVALUATING AND ENHANCING MULTI-
+MODAL AGENTIC SEARCH WITH STRUCTURED LONG
+REASONING CHAINS
+XuyingNing1∗,DongqiFu2∗,TianxinWei1∗,MengtingAi1,JiaruZou1,Ting-WeiLi1,
+HanghangTong1,YadaZhu3,HendrikHamann4,JingruiHe1†
+1UniversityofIllinoisUrbana-Champaign,2Meta,3IBMResearch,4StonyBrookUniversity
+∗Equalcontribution. †Correspondingauthor.
+{xuyingn2, jingrui}@illinois.edu
+https://mc-search-project.github.io
+ABSTRACT
+Withtheincreasingdemandforstep-wise,cross-modal,andknowledge-grounded
+reasoning,multimodallargelanguagemodels(MLLMs)areevolvingbeyondthe
+traditionalfixedretrieve-then-generateparadigmtowardmoresophisticatedagentic
+multimodal retrieval-augmented generation (MM-RAG). Existing benchmarks,
+however,mainlyfocusonsimplifiedQAwithshortretrievalchains,leavingadap-
+tiveplanningandmultimodalreasoningunderexplored. WepresentMC-SEARCH,
+thefirstbenchmarkforagenticMM-RAGwithlong,step-wiseannotatedreasoning
+chainsspanningfiverepresentativereasoningstructures. Eachexamplespecifies
+sub-questions, retrieval modalities, supporting facts, and intermediate answers,
+with fidelity ensured by HAVE (Hop-wise Attribution and Verification of Ev-
+idence), resulting in 3,333 high-quality examples averaging 3.7 hops. Beyond
+answeraccuracy,MC-SEARCHintroducesnewprocess-levelmetricsforreasoning
+quality,stepwiseretrievalandplanningaccuracy. Bydevelopingaunifiedagentic
+MM-RAG pipeline, we benchmark six leading MLLMs and reveal systematic
+issuessuchasover-andunder-retrievalandmodality-misalignedplanning. Finally,
+weintroduceSEARCH-ALIGN,aprocess-supervisedfine-tuningframeworklever-
+agingverifiedreasoningchains,showingthatourdatanotonlyenablesfaithful
+evaluationbutalsoimprovesplanningandretrievalfidelityinopen-sourceMLLMs.
+1 INTRODUCTION
+Multimodallargelanguagemodels(MLLMs)haverapidlyadvancedintheirreasoningabilities(Wang
+etal.,2025b;Huangetal.,2025b;Lietal.,2024),movingbeyondtext-onlyinputstointerleaved
+cross-modalcontexts. Toensurefactualityandrobustness,Retrieval-AugmentedGeneration(RAG)
+has emerged as a key paradigm for grounding model outputs in external textual evidence (Gao
+etal.,2023;Zhaoetal.,2024;Fanetal.,2024). Buildingonthis,MultimodalRAG(MM-RAG)
+equipsMLLMswithvisualseekingandextendsknowledgegroundingfromtext-onlyevidenceto
+multimodalcontexts,therebyfacilitatingcross-modalreasoningforknowledge-intensivequeries.
+Agentic Reasoning Golden Reasoning Chain Agentic Reasoning Golden Reasoning Chain
+Prediction Prediction
+Inpractice,queriesforMLLMsareoftenambiguousandcomplex
+Q A t c m c s r A h e u o i r m : g u e p c r l W l n c r r e h e i e e m i h r c a f h n s i i t n c c a w a e t i a o g l a t g n a y n n n e b e t s h l , c , i f m b i G e o a e w t l l u n r i a a h d d c s d t b c e , i a h e d r q w r l w e u i e u e s t h h m h a i l c i e r a s i r i e s e s n s t t n t i ? d s h h a a d e t c i f i n e s s o f r q d p t e e r p u o i a g t f c a i r h o t s a i t i u c e e r n i r t r a d d t i h i o i l n i n o n i n g n g w g Q A t c m c s r A h e u o i r m : g u e p c r l W l n c r r e h e i e e m i h r c a f h n s i i t n c c a w a e t i a o g l a t g n a y n n n e b e t s h l , c , i f m b i G e o a e w t l l u n r i a a h d d c s d t b c e , i a h e d r q w r l w e u i e u e s t h h m h a i l c i e r a s i r i e s e s n s t t n t i ? d s h h a a d e t c i f i n e s s o f r q d p t e e r p u o i a g t f c a i r h o t s a i t i u c e e r n i r t r a d d t i h i o i( l n i m k n o n i n g n g w g F n i i o n g w i u m r l e e a d 1 l g ) r . e e t - T r i i h n e e t v e y a n l g s Q b i t s w h m h e u e o i a : h e r a a s a W v v g d s t o in h e t q c i p a s , e a u f e r e i t a t t t t r d h s o a i r a o s t e t f e e S o t r i c s r r h a t r s i t s e n t a i d y e a m b e n F r n b w l p e a r a is a a i m h i l c n h n o e e s t e l m c c e r i s n e i a o d s e t y e t f i c n e i o t n t eo s t d h y ? ot e a h e n na e a d n r , d i n d r g t e h . q e A u s i s r h e M al m l L o u w L l M t Q b i t s w h m h c ie u e : h e r a a s W a - v g d s a t o i h e t q c s s i p a s , e a u r es i t a t t t tt r h s o i r a o s t e e a e t f e e S o t r i c s h a t r s s i t s d e np t a d y a m b e n F r w l p e a r a i v , s s a i m h i l c n h n o e t e l m c o c e a r ic n e i a o d s e e t f i c n e i l n t r n t o s t d h v y ? t e ao h e c n e a d a r s , e b s l t - e o m w w o a i d t r a h d l, fi lo a x n n e g d d Q b i t s w h m h e u e : h e r a a s W a v g d s t o i h e t q c i p a s , e a u r e i t a t t t t r h s o i r a o s t e t f e e S o t r i c s h a t r s i t s e n t a d y a m b e n F r w l p e a r a is a i m h i l c n h n o e t e l m c c e r i n e i a o d s e e t f i c n e i t n t o s t d h y ? t e a h e n e a d r ,
+< A < T S rc h u h o b a u - n Q g g u h e e t l > s G I t d a io e b n n ri t > e if l y W i n th h t e a h t e b b i i b i m b li l a c ic a g a l e l s . s < c c / e T e n h n e e o f u e is g a d h tu e t r > p in ic g t ed in < G Q ab u r e ie s l t i i o s n d > e p W ic h te a d t b in ib t lrh ic e ae l i m scaa e g n ese ? feoatunringi Anrchagngel models (W< b m u T a s h in ao o li u p n e g e nr h a s t t e > og r r v T , i h i c t e s e … e qes u … t e ats b t l i i o s n ha m as elk n s t. f y o,e r a t r h ,2 e th n e a0 s m ta e r2 t o o f f t4 h it e s ), they< vai Q si u bre le se o ti n o n th >ie W nve h h aci t c i l s e r t i h n ee t h n e aa m im esa o g f ei t ? hne bgus olpeyrator posi- < < op T S e h u r o b a u - t Q o g r u h d e t e > s p t T i ic o h t n e e > d q u W in e h s th a ti e t o i n i s m a t a h s g e k e s n ? f a o m r t e h e o f n t a h m e e b u … s
+< Im S a e g a e rc < h /S > e L t a h o < s < r e c c T S c a e i h h u m l n o > b I a e m u - R g Q g f a e e e u h g t a f e r t e e t i > s e u a R t v T r t i u e e i o h n r t d n r e i g n i > e c g i A o v m W A a n r a c l t r h e g c h w e n h e a i r t t a e n h d o n g i e I m g s n e p e p i t l t i h l t c u G e G i t s t d a s a p . b b . t a . r h . r i i i e n e e t l l A i . ? n . n g .. n c u u n rr c e i n a t t l i y o n Retrieved go < < ld A Q e n u n s e s w s u t e i p o r p > n o > T rt h i W n e g h A i i c m n h n a m g u t a e e n u … i s c l te i o a … u i t m io a z n n h . ol i l e d. n s , d th g is2 pa a i0 t nt s h in2g? i b 5 s a a p c ; o b k t ) b e , o n s < I n m St u a eig e a e c rac < s h / h lS > e,L a f < " < o o S r T p S c c aa o ha h e u h m l r o b > a I su T m - rt o Q R o r g a a r e h u g n d tw t e i r e s s > e i s e " p R t t T , v iu ic o e h a e e e t t e s n d e r i > dp i e b c nr v o v u W d in a n s iac p l h t t o ee a h w a p n t e t t i e e t t o i h r d i s r o i m a I m i t , v n t n a hr o p i g e t r t t u h ' e e t s d n e t e ? d a n i . r m a . e .e n m . t e rt i e e o m a g v f i s e t h ds e i m a bs k u a s g n u e d d c e h s c r p o i r c R m e o t h rie b v p e ed l o r g e < < S o A Q l a d sm a n u m e s e n Ti w s r g s att e u i n o r - p is > e n p oe > s o S s r n a I t t n i o a m n n b w g T t l i h r s l im , a i a h v n t e a c y s d g ae . ? e i a … rd n b w … aa g s e thp h e n dti a sti e ri v cvt e fo i er d o s c rs . ro R ( s L e s i - - < < S /S e e a a r r c c h h > > I m R < " e S s T e a a t h t g a r m o i b e e u T l v R i r g e s a e h d h n t t m r i s > m ie " e T … a v n h g a t e e < l y w S b c e u u a a it s p b r h t - o o i Q I o p f n n u e S p e r … a u a s m t t t o I i T m o r' r s n a a > n n g a s e W m … h e a i t s i s the
+held? caption. Now I need to find information……
+Retrieved content omitted.... Retrieved golden supporting text…m…odal retrieval, and< of S S uma b m -Q T u raue n s s ti lo an ntd > i w Wmh h e a n t d is io d th it e ds e ta s r taa t… bl . ils . hmeentv yeair dencReetrieveidn goldteen sgupprortaingt teixto……n. This shift <Search> Text Retrieval for supporting fact
+Conversation continues for two more turns…
+< M < pa T S u i h u n s o b t e in u - u Q g g m u h a e t o c > s q f T t u A i h o ir r e e n t . d > p a f W o in r h t i t e n h n g e a i c s n o h d ll e e f l c o d t r i o b h n y o ? w th .. e . m . P u h ch il a w d a e s l p th h i i s a < < pa A Q i n n u t s e in w s g t e i o a r> n c q > P u h W ir i e l h a d e d n f e o l a r p n t h h c c d i e a f o c a l M r o u w lale ls h c e a l st u i t o sm p ns r ? i o c i e ff A c w or a t s . t r R he m A o G vi t n o g w b< a Se r ear d cyh>o. < S t . h m . T a . e . h m nN s o T t o u a ur a r d g r t e n h o l sl e t f , > v i ts t at I s p n in e h m t e cm i e a n if d i f i e n c o l a t r i o m n lol e y g afi a i t s t i t s o d e h n r e e v x s r f i a c o t m a e ue b n o t ll o d r is e d. S h . . i m . n a af n e o n r F r mgt r a y e a n e tei c a o t i r n s c a n r a o n b . d i ot u e ti v c e s - e th a e rc n h < < d F - i A Q r d a n u g n -S s e c a w s i e s m e t e c i T o o r n > r n ? n a > 1 n 9 hs H e 7 b o 6 e w a . r g m in a n a m n t y ac i y n e e lin a ee rs p b d a u f s t a e s r er i r t r s v ei a e c s e t a a d to b l S i s s i a h n g m o en m n t in o g f < S la E a te m n r d . T > I r t a s F n h i s n e . a a I l t d A w qu n a a s s r w e te e s r t r s a : b i T s li h s in e h e S b d u a s n in o C 1 p a 9 e r 7 r lo a 6 s t o … , r C i o s a n lif e o r y n e i a a r .
+Retrieved content omitted.... Retrieved golden supporting text.(...multimodal agentic< is S h u e bRa - d Q q u uAe a s rt t e io reGn d > ? W)hat is( thWe city awhenre SgamTreanst al.,Retr2ieve0d g2olde5n suapp;ortinLg texit....et al., 2025a;
+< 1 < t A h 8 T S m is 9 h u e 9 o a b r , c i u - c f Q q g a o u u h n r i e s t $ m > i s 1 t T i t u o , i h 7 s o n e 5 e n r 0 u > p e . m a p W i r s n e ? h t s i a n e t g n h t w i f s o a to r s r t a i h c c e a q l a u s r i i t r g i e s n d t i f r o i e c n g a a n A r c d p e i r n i d g l id 5 , < < t m h A Q i u s n u s a e s e c u w s q m t e i u o r s i > s n ? i > t A io W p n r h i f l o a 5 r t , t w h 1 a e 8 s 9H 2a 9 t r h t i f e s0 o t h ru r i e $ s 2g t 1 o a a , r 7 r i d c 5 5 n a i 0 n l . g s ) g i A g m. ni e fic r e i a Ac n a c n t e c o a f c l. o , r 2 d 0 in 25 g Reat l rie y ;ve , d < C Jc T a o hnr in l o o ten u se n g , t h C o twa > me l i i S f t o t a te r m d n . ibT . a a. r . . a H ne l s o w . isne , h v e eca r 2 , d I q hs u 0 ti a ll r mt n 2 e e r e e d d 5 at in h ; e Sr ank Z s he a n n g d e e t v < < S a a A Q am n u l l s e T .w s rua t ,e i n o r s > n a 2 l > O o c W t n a 0e t h ie e y do r e2 ? e a r a n r 5l e a t t e h br e . p h ; e i ad p C qua e r h te l rs e i of n n e e s t a a r l e ., F in i g gu m re ul 1 t : im E o x d a a m l p a le ge q n u t e ic ry s r e eq ar u c i h r-
+establishment year and the start of its mainline…… withalongreasoningchain.
+Retrieved content omitted.... Retrieved golden supporting text.n...eededtofaithfully< ScS am uab T - r Qpan u s et s a t nuio d n wr> h W een h d a i t d ai s it tns h t e a r edt s it t s a b m leis a h in mvlin e e na t s y e elrv aui r c o e f a tetRhetrieevesd geoldenc suappportinag tbext..i..lities.
+to San Francisco?
+< w T o h rk o u p g u h rc t> h a T s h e e d a b c y q u a i n s i A ti m on e r m ic a a r n k e m d u T s a e n u n m e . r’s first < p A ur n c s h w a e s r e > d I b t y w a a s n T A a m n e n r e i r c ' a s n f i m rs u t s w e o u r m k . to be <Search>..... No relevant information found.... <Answer> San Carlos, California.
+<Thought> I have not been able to retrieve the
+< A h o O m e n E n s u l n n s d A s a u d e p b w n u > r y c i m a l F i t a 5 h . T i t n , e a i o 1 a n P n 8 l n h 9 A e s i 9 c r l n a ’ , e s s d f n w o e f e i r r l e p s $ f r e t h : 1 w a i a T ,7 t o u h M 5 r r e k 0 i u n , p p s g a a u e A n i r u n c d r m t c h i n r h a e o g a s p f n e d r A g e d e r e s p t b , e l i y c w G n t t a s a a s n s b t H h r A a i e e e c m n l q , e r u i y s r i i r c e a d n < A M $ p 1 u E n u , r n n s 7 c u d e 5 h n u > 0 a c m , s G i e a a o o d n tio f l d b d A n y i e t r s n t a w , c n w A a e s n A a n e s m s T , a w a e i n s c r e n i q c r h e : u a e r i T n l r ' d s e h m d e f b i r u y o p s s n t t a e h w i A u n e o m t p i P r n r k . i h g l i t 5 l o d a , e d b 1 p e e 8 i l c p 9 t h 9 s i a f t o h r e e s < i e t n o e s s E S t r t S n a a v a a d b i b c n n l l > e i i s s C F F h h fo r a i m m a n r r n l e e a S o c n n l s a i t t A s , m c y y C n T o e e s a . a a r w l a i r r f n o e o o s r r r r n . : t t i h h S a e e , a b m s s u t t T a a t r r r I a t t c n o o a s f f n t i i t h n s s e o h m t m e p a a a r i d o n in q v li l n u i i d n e a e e r s t i e t e s r r e v d ic e < S m l C a E a a t a e m n l i i n r f d . o T l i > I r n r t n a s e G i n a h b s o . e u . l a d s It1 d e s w q n e u a r A a s v r n ic e te s e s r w t s t a o e b a r S l r : i e s a T h n l h o e e c F d a r b i a t n u e n s d 1 c 9 i o i s n 7 p c 6 e S o r a a o a n n n to d e C r b y a is e e r l g a o a r s n ,
+
+============================================================
+第 2 页
+============================================================
+PublishedasaconferencepaperatICLR2026
+Table1: Left:Comparisonofexistingmultimodalretrieval-augmentedQAdatasets.Right:Distributionofthe
+fivereasoningtopologiesinMC-SEARCH,withouterringsillustratinghopdiversity(2–5hops).
+V W I B O n i e K f e Q n o b - u S c V Q h A e Q A e m E k A a ( ( C ( r L C ( k h M e h a r e a n n n r g e i r n e e o e t t t a a e a l l t . . l , , . a , 2 l 2 . 2 0 0 , 0 2 2 2 2 3 2 0 2 ) ) 1 ) 9) T K e M x n t o o T T T /C w d e e e a x x x a le p l t t t i d t t i g y o e n ≤ T 1 1 1 H 2 y H H H p o H i p o o o c o s p p p a p l s L (≥ on 4 g ✗ ✗ ✗ ✗ H C o h p a s in ) A S n t n e o p ✗ ✗ ✗ ✗ t w a i t s io e n R T e o a p s o ✗ ✗ ✗ ✗ o l n o i g n y g 4 Hop 5 H I o 3 m p H P o a p F a g 4 o r Ho e r a p k - l T l 5 e e H M o F p u o 2 x l l r H t k o i p - t Im 3 H a op ges Chain 4 T H e op xt-Initiated 3 Hop I I n m i C t a i h g a a e t i e - n d 4 Hop
+MMSearch(Jiangetal.,2024) Text/Image 1Hop ✗ ✗ ✗
+D M M M y 2 R C n R A - - A V S G G Q E ( A A H ( R L u ( i C L u e H i t e e a t t l a . a , l. l 2 , ., 0 2 2 2 0 0 5 2 2 ) 5 5 c b ) ) T T T e e e x x x Im t t t / / / I I I a m m m ge a a a g g g e e e ≥ ≤ 1 1 4 2 H H H H o o o o p p p ps s ✓ ✗ ✗ ✗ ✓ ✗ ✗ ✗ ✓ ✗ ✗ ✗ 3 H 5 o H p op 4 Ho T p e C x h t a -O in nly 3 Hop 2 Ho 5 p Hop
+Althoughanumberofrecentbenchmarks(Huetal.,2025;Jiangetal.,2024;Liuetal.,2025c;Lietal.,
+2025b)haveprovidedvaluableevaluationsofMM-RAG,theyprimarilyfocusonstraightforward
+visualevidence: seekingquestionswithonly1–2retrievalsteps,thusfallingshortofexaminingthe
+adaptivesearch-enhancedreasoningbehaviorsrequiredinpractice. Specifically, currentdatasets
+remainlimitedinthreekeyrespects: (i)mostadoptsimplequestion-answerformatswithafixed
+retrieve-then-generatepipelinethatcollapsesmultimodalevidenceintoaprimarytextualchannel(Hu
+etal.,2025);(ii)theyrestrictevaluationtoshort1–2hopretrievalswithoutlong,adaptivereasoning
+trajectories(Lietal.,2025b);and(iii)theylackstepwiseannotationsandexplicitreasoningtopologies
+thatclarifytherolesofdifferentmodalitiesinthereasoningprocess(Huetal.,2025;Liuetal.,2025b;
+Lietal.,2025b). AssummarizedinTable1(Left),theselimitationsmakeitdifficulttodetermine
+whetherMLLMscantrulyperformlong,structuredreasoningovermultimodalevidence.
+Tofillthisgap,wepresentMC-SEARCH,thefirstbenchmarkforMultimodalagenticRAGwithlong,
+structuredChainsofSearch-enhancedreasoning. Eachexampleispairedwithagoldenstep-wise
+trajectoryspecifyingthesub-questionsequence,retrievalmodality,supportingfact,andintermediate
+answer,enablingfine-grainedevaluation,layingthefoundationforprocessrewardmodeling.
+MC-SEARCH isdesignedtobelong, diverse, andnon-redundant. Itcoversfiverepresentative
+multi-hopreasoningstructuresasvisualizedinFigure2,includingText-OnlyChain,Image-Initiated
+Chain,Text-InitiatedChain,ParallelImage-TextFork,andMulti-ImageFork,capturingbothserial
+and parallel reasoning patterns across modalities. To guarantee that each hop is necessary and
+structurallymeaningful,weintroduceHAVE(Hop-wiseAttributionandVerificationofEvidence),
+whichfiltersspuriousorredundantsteps,resultingin3,333high-qualityannotatedexampleswithan
+averagechainlengthof3.7hops,surpassingexistingbenchmarks(Huetal.,2025;Liuetal.,2025b;
+Lietal.,2025b). Table1(Right)reportsthechain-lengthdistributionacrossreasoningtopologies.
+Beyondanswer-levelaccuracy,inMC-SEARCH,weproposethreeprocess-levelevaluationmetrics:
+(i) LLM-as-a-Judge for open-ended reasoning quality, (ii) Structure-Aware per Step Hit Rate for
+per-step retrieval fidelity, and (iii) Rollout Deviation to quantify execution drift. To evaluate the
+abilities,wefurtherdevelopaunifiedagenticMM-RAGpipelineforfairbenchmarkingandextensive
+experiments with six leading MLLMs, including both proprietary and open-source models. Our
+analysisrevealskeyweaknessessuchasover-retrieval,under-retrieval,andmodality-specificplanning
+errors,underscoringtheneedforbetteradaptiveplanningandretrievalovermultimodalevidence.
+Inadditiontoservingasanevaluationresource,ourdataalsoprovidestrainingsignalsforimproving
+model capabilities. To this end, we present SEARCH-ALIGN, a conversation-level alignment
+frameworkbuiltonHAVE-verifiedreasoningchains. Itappliessupervisedfine-tuningbeyondfinal
+answers,usingstep-wisetrajectoriestoprovideprocess-levelsupervisionthatstrengthensopen-source
+models’abilitytoplanandretrieveacrossmodalities.
+Ourmaincontributionsaresummarizedasfollows:
+• Benchmark: WepresentMC-SEARCH,thefirstbenchmarkforagenticmultimodalRAGwith
+long,step-wiseannotatedreasoningchainsspanningfiverepresentativestructures,verifiedbythe
+HAVEprocedurefornecessityandnon-redundancy.
+• Metrics: Weproposenewprocess-levelmetricsthatmovebeyondansweraccuracytoprecisely
+attributereasoningquality,per-stepretrievalandplanningfidelity.
+• Evaluation: WedevelopaunifiedagenticMM-RAGpipelineandconductextensivebenchmarking
+ofsixleadingMLLMs,revealingsystematicissuessuchasover-andunder-retrieval,modality-
+misalignedplanning,andeightcharacteristicerrortypes.
+2
+
+============================================================
+第 3 页
+============================================================
+PublishedasaconferencepaperatICLR2026
+MC-Search Benchmark Construction Multimodal AgenticRAG Pipeline
+Input
+Grouped Metadata Instruction Example Original Question: What biblical scene featuring Archangel Gabriel is
+- - - R C A R ea o e cc s q n o u u te n r i a r x in e t t e m g G a t e r o n o n p d u t o n o C l d o f o e g h th d y e e r ent Q A R [ S u ( e : : S b a F M u - s in A b o a a - n n i q n l s i u n A w Q e g n e u s s C r t e w ) i h o s … a e t n ] i i r o , n n F : act_ID, d h s m i e o g u p w n s i i e c f m i t u c e m u a d n c s h i c ? n e w t d h a i e s d i i t t m h a i a c s g q a e u c , i q r w u e h d is e i f t r o i e o r ’ n s t h t r h e e i p c s r o p e l a l s e e in c n t t t i i o n f n o g , r c a t u n h r d e re a w n r t h t l i a y s t t h h r e e i l s g d t a , o r w r d ic h in a e l g n A a m nd e r f i o c r a n
+Iterate
+MultimodalLargeLanguage Models
+Multimodal Large
+Thinking … Reasoning Model (e.g.,
+Data across Five Reasoning Topologies GPT-4o)
+Image-Initiated Chain Text-Initiated Chain Text-Only Chain
+Action: Sub-Query:e.g.，What
+… … … e.g.，[Image Search with Text Query] biblical scene featuring
+Image Search with Image Archangel Gabriel is
+Text Search depicted in the image?
+Multi-ImagesFork Imag P e a - r T a e l x le t l F ork Multimodal KB
+Reason in
+… … S e u .g b .， -An T s h w e e A r n : nunciation. Retrieved
+Content
+Data Filtering by HAVE:Hop-Wise Attribution and Verification Output
+FinalAnswer:The painting depicts the Annunciation scene, is held by the Philadelphia
+Context Utility Examination M pu u r s c e h u a m se d o f b A y r a t n , w A a m s e a r c i q ca u n ir e m d u o se n u A m p . ril 5, 1899 for $1,750, and it was Tann M e i r s ' s s i n fi g rst work to be
+Navigation Ability Examination
+Redundant Hop Shrinkage
+Redundant Hop? GoldenChain Chain Matching PredictedChain
+~3K Samples Chain-level Analysis: Hit Per Steps (HPS) = 3/4, Roll Deviation (RD) = 1
+Figure2: OverviewofMC-SEARCHbenchmarkandevaluation.Left:Benchmarkcoveringfivereasoning
+topologies,filteredviathehop-wiseattributionandverificationofevidence(HAVE)process.Right:Multimodal
+agenticRAGpipeline,whereanMLLMiterativelygeneratessub-queriesandactions,retrievesmultimodal
+evidence,reasonsovertheretrievedinformation,andintegratesittoproducethefinalanswer.Ourframework
+furtheralignspredictedreasoningchainswithgoldentrajectoriestoassesschain-levelretrievalandplanning.
+• Method: WeintroduceSEARCH-ALIGN,whichleveragesverifiedreasoningchainsforprocess-
+supervisedfine-tuningofMLLMs,demonstratingtheeffectivenessofourdatafortrainingand
+improvingplanningandretrievalfidelityinagenticMM-RAG.
+2 MC-SEARCH BENCHMARK
+We propose MC-SEARCH, a large-scale benchmark for evaluating agentic multimodal RAG. In
+contrasttopriorbenchmarksthatfocusonshallowVQAtasks,MC-SEARCHprovideslong,step-wise
+verifiedreasoningchainsacrossdiversereasoningtopologies,enablingbothfine-grainedprocess-
+levelanalysisandmodelalignment. Inthissection,wedetailthebenchmarkconstruction,dataset
+composition,andprocess-levelevaluationmetrics,withtheoverallworkflowillustratedinFigure2.
+2.1 BENCHMARKCONSTRUCTIONANDCOMPOSITION
+Search-Enhanced Reasoning Topologies. To capture the diversity of real-world agentic MM-
+RAG workflows, we design five distinct reasoning topologies that characterize how multimodal
+knowledgeinteractsanddependsoneachotherwithinalongsearch-enhancedreasoningprocess.
+Eachtopologyisrepresentedasareasoninggraph(orreasoningchain)G(Q,A),associatedwithan
+overallquestionQanditsfinalanswerA. Thegraphconsistsofsub-questionsq ,retrievalmodalities
+t
+m ∈{text,image},retrievedevidencer ,andintermediateanswersa derivedfromtheevidenceat
+t t t
+hopt(Figure2). WedenotebyRtheretrievalfunctionthat,givenasub-questionq andmodality
+t
+m ,returnsthecorrespondingevidencer . Formally,
+t t
+G(Q,A)={(q ,m ,r ,a )}T , r =R(q ,m ), A=f({a }T ), (1)
+t t t t t=1 t t t t t=1
+wheref(·)denotesthereasoningprocedurethataggregatesintermediateanswersintothefinalanswer
+AfortheoverallquestionQ.
+Concretely,thefivereasoninggraphsaredefinedas: (i)Image-InitiatedChain,wherereasoningis
+anchoredinimageretrievalatthefirststepandsubsequentlybuildsontextualretrieval,appliesto
+bothimage-containingandtext-onlyqueries;(ii)Text-InitiatedChain,wherereasoningbeginswith
+textretrievaloffactualknowledgeandlaterincorporatesimageretrievalforvisualvalidation;(iii)
+ParallelImage-TextFork,whereimageandtextretrievalevolveconcurrentlywithoutdependency
+acrossspecifichops, sothatinterchangingtheretrievalofsuchhoporderdoesnotalterthefinal
+answer,requiringcross-modalcoordination;(iv)Multi-ImagesFork,wheremultipleimagesmustbe
+3
+
+============================================================
+第 4 页
+============================================================
+PublishedasaconferencepaperatICLR2026
+retrievedforvisualcomparisonbeforeturningtotextualevidenceforfactualsupport;(v)Text-Only
+Chain,servingasabaselinewherereasoningproceedsentirelythroughtext. Dataexamplesforeach
+reasoninggraphareprovidedinAppendixC.
+Data Generation. We construct the MC-SEARCH dataset by collecting multimodal knowledge
+fromWikipediaandorganizingitintocoherentclustersoftextandimages,typicallydrawnfrom
+thesameorcloselyrelatedpages, followingChangetal.(2022). Fromtheseclusters, wecurate
+salienttextfactsandassociatedimagesasthebasisformulti-hopQAgeneration,supplementedwith
+illustrativeexamplesalignedwitheachreasoningtopology. Fromthecuratedpools,wethengenerate
+questionsatscalewhileensuringbalancedcoverageacrossthefivereasoningstructures. Specifically,
+wepromptGemini-2.5-Flashtoselectonetopologyandsynthesizeastructuredmulti-hopquestion
+togetherwithitsanswerandacoherentreasoningchaingroundedinsupportingfacts. Thisprocedure
+yields approximately 21k examples aligned with the five search-enhanced reasoning topologies.
+AdditionalconstructiondetailsandprompttemplatesareprovidedinAppendixN.
+DataFiltering. Akeychallengeinconstructingahigh-qualitydatasetisthatMLLMsoftengenerate
+longreasoningchainswithhallucinatedsteps,thatis,plausiblebutungroundedhopsnotsupported
+by evidence, and redundant steps that do not contribute to the final answer. To address this, we
+proposeHAVE(Hop-wiseAttributionandVerificationofEvidence),adatafilteringmechanismthat
+determineswhethereachhopinthereasoningchainisbothnecessaryandnon-redundant.
+LetC ={r ,r ,...,r }denotethesetofretrievedevidenceineachhopofareasoninggraph. We
+1 2 T
+definethecontextutilityofstepr asthedropinansweraccuracy(measuredbytheF1scorebetween
+t
+goldenandgeneratedanswers)whenr isremoved:
+t
+Util(t)=F1(C)−F1(C\r ). (2)
+t
+AstepisidentifiedasnecessaryifUtil(t)exceedsathreshold. However,somestepsmaynotdirectly
+affectansweraccuracybutstillservetoconnectsub-questionsandguidedownstreamreasoning. For
+example,inatwo-hopchain,thefirststepmayidentifythebuildingintheinputimageas“Christ
+Church Cathedral,” while the second step queries factual knowledge about this entity. Although
+thefirststephaslowcontextutilityonitsown,itsextractedentityisessentialforthesecondhop,
+making it indispensable for the reasoning process. To capture such cases, we further assess the
+navigational role of a step by checking whether entities in its intermediate answer a appear in
+t
+downstreamsub-questions:
+(cid:26)
+1, ifEnt(a )∩Ent(q )̸=∅,
+Nav(t)= t t+1:T (3)
+0, otherwise,
+whereEnt(·)denotesthesetofentitiesextractedfromasub-questionoranintermediateanswer. Ifa
+stephasUtil(t)belowthethresholdandNav(t)=0,itismarkedasredundant.
+We apply HAVE at scale by first filtering the generated dataset to Table2: Benchmarkstatistics.
+removesampleswithmorethantworedundanthopsintheirreasoning
+Statistic Number
+chainsusingtheopen-sourceQwen2.5-VL-7B,yielding4.8kcandi-
+ParallelImage-TextFork 680
+datechains. Tofurthermitigatemodel-specificbias,wethenperform
+Image–InitiatedChain 1,306
+hopshrinkageandsampleverificationwithGemini-2.5-Pro,while TextChain 945
+simultaneously extracting key knowledge entities from the golden Text–InitiatedChain 169
+Multi–ImagesFork 233
+answerstofacilitatefutureanswerevaluation. Finally,weconduct
+a redundancy check using HAVE with the data-generation model TotalSamples 3,333
+Gemini-2.5-Flash,andyielding3,333highqualitysampleswithall KBImages 389,750
+KBDocuments 784,473
+necessaryhopsandcoherentreasoningtrajectories. Thefinaldataset
+Avg.Hops 3.79
+compositionandstatisticsarereportedinTable2andAppendixE.
+Moreover,toensurethereliabilityofsubsequentstep-wiseretrievalaccuracyevaluation,weenforce
+that the reasoning graph for each question is unique. To this end, we use Gemini-2.5-Flash for
+automaticverification,detectingandfilteringconfoundingknowledgepiecesintheknowledgebase
+sothatnounusedtextfactorimagewithinthesametopicclustercanindependentlyresolveany
+sub-question. Thisprovidesasolidfoundationforstep-wiseevaluationofagenticMM-RAG.
+QualityVerification. Toensuredatasetqualityintermsofreasoningcoherence,grounding,andQA
+accuracy,weemployGemini-2.5-Protoevaluateeachchainona1–5scalealongfourdimensions:
+factual correctness, step necessity, clarity, and multimodal alignment (Appendix F). The dataset
+4
+
+============================================================
+第 5 页
+============================================================
+PublishedasaconferencepaperatICLR2026
+achievesanoverallaveragescoreof4.87,andlow-scoringsamplesarefurtherrefinedthroughtargeted
+answerediting,yieldingahigh-qualitybenchmarkforsearch-enhancedmultimodalreasoning.
+2.2 EVALUATIONPROTOCOL
+Toevaluatemultimodalsearch-enhancedreasoning, webelievethatmeasuringonlyfinalanswer
+accuracyisinsufficient,especiallyforlongreasoningtrajectorieswhereerrorsinretrievalorplanning
+maynotbereflectedinthefinaloutput. Toenableamorefine-grainedassessment,weintroduce
+metricsthatcapturebothanswercorrectnessandthefidelityofstep-wiseretrievalandplanning.
+AnswerAccuracy. Weusefourcomplementarymetrics: (i)F1,thestandardtoken-leveloverlap
+score between the generated final answer and the golden answer; (ii) ∆F1, which measures the
+performancegainbroughtbyagenticMM-RAGbeyondthemodel’sparametricknowledge,defined
+asthedifferencebetweenperformancewithandwithoutretrieval: ∆F1=F1−F1 ;(iii)Golden
+w/oR
+F1,anupperboundobtainedbysupplyingthemodelwithgoldreasoningchainsandgoldenretrieval
+content;and(iv)LLM-as-a-Judge(LJ),whereastrongreasoningmodel(Gemini-2.5-Pro)evaluates
+predictedreasoningchainsagainstthegoldonesalongfourdimensions: answeraccuracy,reasoning
+coherence,keyknowledgeentitycoverage,andstepalignment(promptinAppendixP).
+Chainalignment. WeevaluatehowwellthepredictedreasoninggraphGˆalignswiththegolden
+reasoning graph G. Each reasoning graph is a sequence of retrieval-augmented reasoning steps
+indexedbyt,wherer ∈G denotestheevidenceretrievedatgoldenstept,andrˆ ∈Gˆdenotesthe
+t t′
+evidenceretrievedatpredictedstept′.
+Toassessstep-levelretrievalfidelity,wedefinethe(i)HitperStep(HPS)metricasthefractionof
+goldenstepswhoseevidenceissuccessfullyrecoveredinthepredictedgraph:
+1 (cid:12) (cid:12)
+HPS(Gˆ,G) = (cid:12){(t,t′) | r ∈G, rˆ ∈Gˆ, rˆ =r }(cid:12), (4)
+|G|(cid:12) t t′ t′ t (cid:12)
+where|G|isthenumberofgoldenstepsand|·|ontherightisthenumberofmatchedsteps.Each“hit”
+correspondstoapredictedstepthatexactlymatchestheevidenceofagoldenstep,withduplicates
+counted only once. Beyond exact matching, we further align Gˆand G through maximum-weight
+bipartite matching, where nodes correspond to steps in the two graphs and edge weights reflect
+evidencesimilaritybetweenpredictedandgoldensteps.Thisalignmentenablesfine-grainedstep-wise
+comparisonandbetterhandlescasesinvolvingparallelreasoningsteps.
+To capture structural fidelity, we measure the step-length gap between the predicted and golden
+reasoninggraphs. Alargegapindicatesunder-orover-retrieval,whileasmallvaluesuggestscloser
+alignmentinreasoningcomplexity. Werefertothismetricas(ii)RolloutDeviation(RD):
+RD(Gˆ,G)= (cid:12) (cid:12)|Gˆ|−|G| (cid:12) (cid:12). (5)
+3 AGENTIC MM-RAG PIPELINE AND PROCESS-LEVEL ALIGNMENT
+TosystematicallyevaluateandimproveMLLMsinsearch-enhancedreasoning,weintroduceaunified
+agenticMM-RAGpipelineforadaptiveplanning,retrievalformultimodalevidence,andreasoning
+overevidence,togetherwithSEARCH-ALIGN,aprocess-levelalignmentframeworkthatleverages
+verifiedreasoningchainstostrengthenopen-sourcemodels.
+3.1 AGENTICMM-RAGPIPELINE
+AsillustratedinFigure2(Right),ourpipelinemodelsmultimodalsearch-enhancedreasoningasan
+iterativeprocesswiththreemodules: (i)sub-queryandactiongeneration,(ii)evidenceacquisition,
+and(iii)iterativereasoningandsynthesis. Ateachiteration,theagentformulatesasub-goal,selects
+amodality-awareretrievalaction,integratestheretrievedevidence,anddecideswhethertocontinue
+searchingorterminatewithafinalanswer. Thisdesignsupportsnotonlyeffectivereasoningbutalso
+fine-grained,step-levelevaluationforagenticRAG.
+(i)Sub-queryandActionGeneration. Givenacomplexquestion,theMLLMfirstpredictsthenext
+sub-goalandgeneratesafocusedsub-query(steps1–2inFigure2). Itthenadaptivelychoosesoneof
+threeretrievalactions,correspondingtodifferentwaysofaccessingmultimodalevidence: (a)text
+searchwithatextquery,(b)imagesearchwithatextquery,or(c)imagesearchwithaninputimage.
+5
+
+============================================================
+第 6 页
+============================================================
+PublishedasaconferencepaperatICLR2026
+(ii)EvidenceAcquisition. Theselectedactionisexecutedoverourlocalmultimodalknowledge
+base. Thesub-queryisembeddedbyamultimodalencoderfordenseretrievalinthecorresponding
+modality,returningtextualorvisualevidence. Foreachsub-query,wekeepthetop-1evidenceby
+query-answersimilarity(step3)andlettheMLLMgenerateasub-answer(steps4–5)afterreasoning.
+Boththechosenmodalityandretrievedevidenceareloggedforprocessevaluation.
+(iii) Iterative Reasoning and Synthesis. The sub-answer and its evidence are fed back into the
+modeltoguidethenextplanningstep(step6),formingaloopofplanning,retrieval,andreasoning.
+Theagentdynamicallycheckswhethertheaccumulatedevidenceissufficient;ifso,itoutputsafinal
+response(step7). Otherwise,itcontinueswithanothersub-query. Thisiterativedesignexposesthe
+fullreasoningtrajectory,enablingmodality-awareexecutionandprecisechain-levelevaluation.
+3.2 SEARCH-ALIGN: PROCESS-LEVELALIGNMENT
+Beyond evaluation, our dataset also serves as a resource for improving model capabilities. We
+introduce SEARCH-ALIGN,aconversation-levelalignmentframeworkforopen-sourceMLLMs
+builtonHAVE-verifiedreasoningchains. UnlikeconventionalSFTthatsupervisesonlyfinalanswers,
+SEARCH-ALIGNprovidesprocess-levelsupervisionbyleveragingstep-wiseannotatedtrajectories
+withsub-questions,retrievalactions,evidence,andintermediateanswers.
+TrainingDataConstruction. Eachreasoninggraphisaugmentedwithexplicitreasoningthoughts
+generatedbyGemini-2.5-Flash,whichexplainhowtogroundreasoninginevidenceandconnect
+adjacenthops. Thisconvertsstep-wiseannotationsintocoherentdialoguetraces: theassistantposes
+sub-questionsandreasonsoverevidence,whiletheuserexecutesretrievalactionsandreturnsresults.
+Supervised Fine-Tuning (SFT). We then fine-tune MLLMs on these conversation-style traces,
+enablingthemtolearnnotonlytoproducecorrectanswersbutalsotoplan,chooseretrievalmodalities,
+andintegrateevidenceacrosssteps. Thisprocess-levelalignmentprovidesarichertrainingsignal
+thatbetterpreparesmodelsforlong-horizonmultimodalreasoning.
+4 EXPERIMENTS
+In this section, we evaluate leading MLLMs on the MC-SEARCH benchmark under our unified
+agentic MM-RAG pipeline, focusing on five research questions (RQs): RQ1: How do MLLMs
+performacrossreasoningstructures,anddoesSEARCH-ALIGNimproveopen-sourcemodels? RQ2:
+Howdoesreasoningchainlengthaffectreasoningperformance? RQ3: Whataretheeffectsofover-
+andunder-retrieval? RQ4: Domodelsshowinherentmodalitypreferences? RQ5: Whatarethe
+typicalerrortypesinmultimodalagenticreasoning?
+4.1 EXPERIMENTALSETUP
+WeevaluatethefollowingMLLMsusingtheagenticMM-RAGpipelineintroducedinSection3.1:
+• Closed-sourcemodels: GPT-4o-Mini(Achiametal.,2023),Gemini-2.5-Flash(Teametal.,2023),
+Gemini-2.5-Pro(Teametal.,2023),andClaude-3.7-Sonnet(Anthropic,2024),representingthe
+strongestcommerciallyavailablereasoning-orientedMLLMs.
+• Open-source models: InternVL3.5-8B (Wang et al., 2025b) and Qwen2.5-VL-7B (Bai et al.,
+2025),twostate-of-the-artvision-languagemodels. Wealsoevaluatetheirperformanceafterusing
+SEARCH-ALIGNframework.
+Evaluationprotocol.Allmodelsareevaluatedunderidenticalconditions.Weusethesameembeding
+modelformultimodalretrieval(Zhouetal.,2024),prompts(AppendixO),anddecodingparameters
+acrossmodels.Eachretrievalstepisrestrictedtothetop-1resultfromthelocalmultimodalknowledge
+base,andthesamemaximumnumberofreasoningiterationsisenforced. Performanceisreported
+usingthesixmetricsinSection2.2: answeraccuracy(F1,∆F1,GoldenF1,andLLM-as-a-Judge)
+andchain-levelretrievalandplanningfidelity(HitperStepandRolloutDeviation). Additionaldetails
+onevaluationandthetrainingofSEARCH-ALIGNareprovidedinAppendixI.IntheAppendixD.1,
+we additionally report fixed-step RAG baselines (1-hop and 2-hop) for the backbone models to
+complementthemainresults.
+6
+
+============================================================
+第 7 页
+============================================================
+PublishedasaconferencepaperatICLR2026
+Table3: EvaluationofMLLMsontheMC-SEARCHbenchmarkundertheagenticMM-RAGpipeline,reported
+across five reasoning graphs. Best backbone results are shown in bold, second-best are underlined, and
+improvementsfromSEARCH-ALIGNonopen-sourcemodelsarehighlightedinboldred.
+AnswerAccuracy ChainAlignment
+ReasoningG Model GoldenF1(↑)
+F1(↑) ∆F1(↑) LJ(↑) HPS(↑) RD(↓)
+GPT-4o-Mini 36.49 34.18 2.63 27.51 1.46 68.29
+Gemini-2.5-Flash 44.10 37.38 3.01 31.46 2.91 72.39
+Image-Initiated Gemini-2.5-Pro 47.61 42.76 3.18 25.90 1.05 69.83
+Chain
+ESOLC
+Claude-3.7-Sonnet 37.80 33.09 2.60 27.31 1.18 72.62
+InternVL3.5-8B 39.11 29.49 2.27 22.59 1.58
+63.86
++SEARCH-ALIGN 42.27 32.65 2.53 32.49 0.94
+Qwen2.5-VL-7B 26.30 8.65 1.34 16.51 4.04
+NEPO
+60.95
++SEARCH-ALIGN 45.70 28.05 2.23 33.59 0.70
+GPT-4o-Mini 24.00 19.16 2.13 16.04 1.94 59.46
+Gemini-2.5-Flash 36.80 31.89 2.35 13.45 1.66 64.40
+Multi-Images Gemini-2.5-Pro 40.37 36.58 2.76 18.68 1.40 61.29
+Fork
+ESOLC
+Claude-3.7-Sonnet 29.78 27.85 2.07 19.43 1.45 62.41
+InternVL3.5-8B 33.08 20.98 2.13 16.02 2.25
+57.65
++SEARCH-ALIGN 36.53 24.43 2.49 39.33 1.67
+Qwen2.5-VL-7B 26.13 7.53 1.41 12.58 3.80
+NEPO
+57.04
++SEARCH-ALIGN 38.01 19.41 2.11 38.01 1.16
+GPT-4o-Mini 30.11 18.46 2.41 27.18 1.76 49.47
+Gemini-2.5-Flash 43.55 26.34 3.30 25.20 1.20 66.27
+Text-Initiated Gemini-2.5-Pro 45.30 29.89 3.62 19.51 0.95 55.94
+Chain
+ESOLC
+Claude-3.7-Sonnet 36.10 17.36 2.63 25.09 1.12 57.13
+InternVL3.5-8B 38.34 25.48 2.60 19.06 1.97
+38.70
++SEARCH-ALIGN 40.87 28.01 2.59 37.82 1.44
+Qwen2.5-VL-7B 31.47 14.34 1.66 17.02 3.80
+NEPO
+39.86
++SEARCH-ALIGN 45.07 27.94 2.42 33.59 0.87
+GPT-4o-Mini 21.98 21.65 2.20 15.00 1.71 53.98
+Gemini-2.5-Flash 29.92 27.94 2.58 11.43 2.70 57.99
+Parallel Gemini-2.5-Pro 34.83 34.19 2.99 16.74 1.29 53.46
+Image-TextFork
+ESOLC
+Claude-3.7-Sonnet 26.43 24.65 1.95 14.32 1.37 58.51
+InternVL3.5-8B 29.74 23.05 2.13 14.22 1.75
+58.82
++SEARCH-ALIGN 30.72 24.03 2.29 23.55 1.45
+Qwen2.5-VL-7B 22.94 14.32 1.33 10.09 3.93
+NEPO
+55.76
++SEARCH-ALIGN 32.73 24.11 1.78 25.07 1.05
+GPT-4o-Mini 30.96 30.94 2.58 21.94 1.13 61.90
+Gemini-2.5-Flash 34.03 33.96 2.49 20.59 1.04 67.72
+Text-Only Gemini-2.5-Pro 34.47 34.46 2.66 21.59 1.07 62.42
+Chain
+ESOLC
+Claude-3.7-Sonnet 27.37 26.75 2.08 29.64 3.14 66.38
+InternVL3.5-8B 34.82 27.84 2.45 21.81 2.15
+65.72
++SEARCH-ALIGN 38.45 31.47 2.68 20.54 1.28
+Qwen2.5-VL-7B 23.54 14.89 1.36 13.35 4.63
+NEPO
+61.57
++SEARCH-ALIGN 37.54 28.89 1.99 19.04 0.98
+4.2 MAINRESULTS(RQ1)
+BackbonePerformanceandSearch-AlignGains. AsshowninTable3,proprietarymodelssuch
+asGemini-2.5-Proachievethehighestoverallaccuracyacrossmostreasoningtopologies. Among
+open-sourcemodels,InternVL3.5-8Bisthestrongerbackbone,whileQwen2.5-VL-7Bconsistently
+lags behind. With SEARCH-ALIGN, however, both backbones see substantial gains: InternVL
+improves by about +2.8 F1 and +12.0 HPS on average while reducing RD by 0.6, and QwenVL
+achievesevenlargerboostsof+13.7F1and+16.0HPSwitha–3.1dropinRD.Afteralignment,
+Qwen2.5-VL-7BnearlymatchesGemini-2.5-Proontext-centricchains,andInternVLshowsstable
+improvementsacrossalltopologies. Theseresultsindicatethatamajorweaknessofopen-source
+modelsliesinretrievalplanningandstep-levelreasoningalignmentratherthanbasicperceptualor
+semanticunderstanding,andthatthesecapabilitiescanbeeffectivelyimprovedthroughtrainingon
+high-qualitysearch-enhancedreasoningdata.
+7
+
+============================================================
+第 8 页
+============================================================
+PublishedasaconferencepaperatICLR2026
+Gemini-2.5-Pro
+Gemini-2.5-Flash
+1 Hop InternVL-3.5-8B
+Claude-3.7-Sonnet
+GPT-4o-Mini
+0.4 Qwen2.5-VL-7B
+0.3
+5 Hop 0.2 2 Hop
+0.1
+0.0
+Under-Retrieval Over-Retrieval
+4 Hop 3 Hop
+Figure3: ModelF1acrosssampleswithdifferent Figure4: Model∆F1vs.∆Step(differenceinlength
+chainlengths,showingaconsistentdropinperfor- betweengeneratedandgoldenreasoningchains),where
+manceasthechainlengthincreases. largerpositive∆stepsindicatemoreover-retrieval.
+Topology-SpecificChallenges. Acrossreasoningtopologies,weobserveParallelImage-TextFork
+isthemostchallenging,whereallbackbonesreachtheirlowestF1andHPS.Thedifficultycomes
+from the need to plan and cover both text and image branches simultaneously, so missing either
+branch directly lowers HPS, and under the top-1 retrieval constraint models often fail to capture
+thefullevidenceset. Aligningparallelevidencewithoutstrictorderfurtherincreasestheriskof
+incompleteorinconsistentreasoning. Multi-ImagesForkisalsodifficult,mainlyduetothechallenge
+ofaligningmultiplevisualevidenceswithcorrespondingtextualfacts,wheremodelsoftenretrieve
+therightimagesbutmisattributeorfailtointegratethemcoherently. Incontrast,Text-Initiatedand
+Text-OnlyChainsarerelativelyeasier,astheyrelyprimarilyontextretrievalandlinearreasoning,
+whichalignwithmodelstrengths. Image-InitiatedChainsarealsotractable: oncetheinitialvisual
+stepiscorrect,subsequenttextualvalidationislinearandmorestablethanmulti-branchreasoning.
+4.3 ANALYSIS
+RQ2: Performancevs. ChainLength. Figure3reportsmodelF1acrosssampleswithdifferent
+chain lengths, showing a consistent drop in performance as the chain length increases. Models
+remainrelativelyrobustonshortreasoningchains(1–3hops),whereperformancedifferencesacross
+backbonesaremoderate,withtheexceptionofQwen2.5-VL-7B,whichlagsbehindconsistentlyeven
+atearlyhops. Whenthechainlengthextendsto4or5hops,however,allmodelsexperienceasharp
+degradation,reflectingthecompoundingdifficultyofsustaininglong-horizonreasoning.
+Amongclosed-sourcesystems,Gemini-2.5-Proisthemostrobust,sustainingthehighestperformance
+atlongerhops. Gemini-2.5-FlashandInternVL3.5-8Bdegradegradually,whileGPT-4o-Miniand
+Claude-3.7-Sonnetdropsharplybeyond3hops. Qwen2.5-VL-7Bremainsweakestacrossalllengths.
+Overall,themainchallengeliesinextendedmulti-stepchains,wherecompoundingretrievalerrors
+andunstableplanningreduceaccuracy.
+RQ3: Over-andUnder-RetrievalAnalysis. Figure4shows∆F1acrossdifferent∆Steps,where
+negativevaluescorrespondtounder-retrievalandpositivevaluesindicateover-retrieval. Theresults
+revealthatbothextremesareharmful,thoughindifferentways. Whenmodelsseverelyunder-retrieve
+(∆Step < −2), performance drops sharply as essential evidence is skipped, creating gaps that
+laterreasoningcannotrecover. Conversely,moderateover-retrieval(∆Step=1–2)oftenimproves
+accuracy: Gemini-2.5-Pro,Gemini-2.5-Flash,andInternVL3.5-8Bachievetheirhighest∆F1here,
+suggestingthatoneortwoextraturnscanhelprecoverfromimperfectplanning.
+However,whenover-retrievalisexcessive(∆Step≥4),noiseandirrelevantcontextleadtosharp
+dropsacrossallmodels. Gemini-2.5-Proismostresilient,Gemini-2.5-FlashandInternVL3.5-8B
+remainmoderatelystable,whileClaude-3.7-SonnetandGPT-4o-Miniarehighlyvulnerable. This
+underscoresacentraltensionbetweencapturingsufficientevidenceandavoidingover-retrieval.
+RQ4:ModalityCoverageAnalysis.AsshowninTable4,whichreportsstep-levelretrievalcoverage
+(coveredvs.goldsteps)forbothimageandtextmodalitiesunderquerieswithandwithoutimage
+input,bothmodelsmaintainstrongtextcoverage(>78%)acrossallsettings,butimagecoverageis
+farweakerandhighlydependentonexplicitimageinputs. Forexample,Gemini-2.5-Prodropsfrom
+87.35%withimagementionsto29.50%without,whileInternVL3.5-8Bfallsfrom63.84%to0.66%.
+8
+
+============================================================
+第 9 页
+============================================================
+PublishedasaconferencepaperatICLR2026
+Thesefindingsexposeapronouncedmodalitygap,asmodelstendtodefaulttotextretrievalandlose
+visualgroundingintheabsenceofexplicitimagecues.
+Table4: Stepwiseretrievalmodalitycoverage(Cov.).Red=highcoverage;Blue=lowcoverage.
+Gemini-2.5-Pro InternVL-3.5-8B
+Type Modality
+Covered/Gold Cov.(%) Covered/Gold Cov.(%)
+Image 1,339/1,533 87.35 977/1,533 63.84
+Queryw/Image
+Text 3,230/4,109 78.61 3,395/4,109 82.67
+Image 300/1,017 29.50 7/1,017 0.66
+Queryw/oImage
+Text 2,097/2,510 83.55 2,251/2,510 89.78
+Image 1,639/2,550 64.27 861/2,550 33.69
+Overall
+Text 5,327/6,619 80.48 5,688/6,619 85.96
+RQ5: Error Analysis. Figure 5 shows the distribution of eight error types, annotated using
+Gemini-2.5-Proasthejudge. ThemostfrequenterrorsareRetrieval-Failure(84.7%),Hallucinated-
+Entity/Attribute (75.8%), and Step-Omission (74.3%), revealing that current models often fail
+to ground reasoning in relevant evidence, introduce unsupported content, or skip key steps.
+Mid-frequency errors (e.g., modality mis-
+match,spurioussteps)reflectunstableplan-
+Retrieval-Failure 84.70%
+ning, while structural errors (order/depen-
+Hallucinated-Entity/Attribute 75.75%
+dencymistakes,multi-hopfailures)arerarer Step-Omission 74.34%
+but,givenlimitedretrieval,remainnon-trivial Modality-Mismatch 33.46%
+forfuturestudy. Evidencemisinterpretation Spurious-Steps 24.38%
+isinfrequent,suggestingmodelscanhandle Order/Dependency-Error 19.44%
+Multi-Hop-Integration-Fail 12.07%
+retrieved context; major failures arise ear-
+Evidence-Misinterpretation 8.35%
+lier, during planning and evidence acquisi-
+0 20 40 60 80 100
+tion. Overall, these patterns, together with Proportion (%)
+our HPS and over/under-retrieval analyses,
+identifyretrievalfidelity(modality-awarere- Figure5: Eight-wayerrortaxonomyproportions(higheris
+worse),annotatedbyGemini-2.5-Pro.
+trieval,sufficientplanning/hopcoverage,and
+calibratedstopping)asthecentralbottleneckforreliablechain-levelreasoning.
+5 RELATED WORK
+WereviewexistingworkonMM-RAGbenchmarksandAgenticRAG,withfulldetailsinAppendixB.
+MultimodalRAGBenchmarks. MM-RAGextendsretrieval-augmentedgenerationbyincorpo-
+ratingimageevidenceforcross-modalreasoning(Xiaetal.,2024;Changetal.,2022). Existing
+benchmarksarelimited: mostusefixedretrieve-then-generatepipelines(Marinoetal.,2019;Hu
+etal.,2025),reduceimagestocaptions(Lerneretal.,2022;Chenetal.,2023),restrictreasoning
+to1–2hops(Lietal.,2025b;Liuetal.,2025c),andlackstep-wiseannotations,makingithardto
+assessmultimodalsearch-enhancedreasoning. Weintroduce MC-SEARCH,withHAVE-verified
+longreasoningtrajectoriesacrossdiversetopologies,enablingfine-grainedattributionandanalysis.
+AgenticRAG.Recentworkreframesretrievalassequentialdecision-making,whereagenticRAG
+systemsdecomposequeries,adaptivelyretrieve,andsynthesizeknowledge(Wangetal.,2025a;Li
+etal.,2025a;Zhengetal.,2025b). Whileeffective,mostremaintext-onlyandfocusonmultihop
+QAorscientificdomains(Trivedietal.,2022;Reinetal.,2024). Ourbenchmarkfillsthisgapby
+extendingagenticRAGtomultimodalsettingswithdiverse,andstep-wiseverifiedreasoningchains.
+6 CONCLUSION
+WepresentMC-SEARCH,abenchmarkforstructured,step-wisemultimodalretrieval-augmented
+reasoning,encompassingfivediversereasoningmechanisms.Withfine-grainedannotations,hop-wise
+attributionandverification,andnewchain-levelmetrics,MC-SEARCHenablesthoroughdiagnosisof
+retrievalplanningandreasoningquality. Ouranalyseshighlighttheimportanceofadaptive,modality-
+awaresearchstrategiesinagenticMM-RAGsystems. Lookingahead,weenvisionMC-SEARCHasa
+foundationforadvancingmultimodalagentsandfosteringprincipledevaluationstandardsforagentic
+reasoning. wewillbroadenevaluationstostrongerreasoningmodelsandextendthebenchmarkto
+additionaldomainssuchasscienceandmathematics.
+9
+
+============================================================
+第 10 页
+============================================================
+PublishedasaconferencepaperatICLR2026
+ACKNOWLEDGEMENTS
+ThisworkissupportedbyNSF(2134079),andIBM-IllinoisDiscoveryAcceleratorInstitute. The
+contentoftheinformationinthisdocumentdoesnotnecessarilyreflectthepositionorthepolicyof
+theGovernment,andnoofficialendorsementshouldbeinferred. TheU.S.Governmentisauthorized
+toreproduceanddistributereprintsforGovernmentpurposesnotwithstandinganycopyrightnotation
+hereon.
+EthicsStatement. Ourbenchmarkisconstructedentirelyfrompubliclyavailablesources(e.g.,
+Wikipediatextandimages),withoutinvolvingprivatedata,orsensitivecontent. Weapplyahop-wise
+attributionandverification(HAVE)processtofilterhallucinatedorredundantsteps,ensuringfactual
+groundingandminimizingrisksofmisleadinginformation. Thedatasetisreleasedsolelyforresearch
+purposestoadvancemultimodalreasoningmodelsandagenticRAG,andnotintendedforsensitive
+orhigh-stakesapplications.
+ReproducibilityStatement. Wedocumentthebenchmarkconstructionpipeline,filteringprocess,
+evaluationprotocols,andexperimentalsetupsindetailwithinthepaperandappendix.Tofacilitatefull
+reproducibility,wehavepubliclyreleasedthedatasetandcodeafteracceptance,enablingindependent
+verificationandreplicationofallreportedresults.
+10
+
+============================================================
+第 11 页
+============================================================
+PublishedasaconferencepaperatICLR2026
+REFERENCES
+JoshAchiam,StevenAdler,SandhiniAgarwal,LamaAhmad,IlgeAkkaya,FlorenciaLeoniAleman,
+DiogoAlmeida,JankoAltenschmidt,SamAltman,ShyamalAnadkat,etal. Gpt-4technicalreport.
+arXivpreprintarXiv:2303.08774,2023.
+ShakibaAmirshahi,AminBigdeli,CharlesLAClarke,andAmiraGhenai. Evaluatingtherobustness
+ofretrieval-augmentedgenerationtoadversarialevidenceinthehealthdomain. arXivpreprint
+arXiv:2509.03787,2025.
+Anthropic. Introducingthenextgenerationofclaude,2024. URLhttps://www.anthropic.
+com/news/claude-3-family.
+ShuaiBai,KeqinChen,XuejingLiu,JialinWang,WenbinGe,SiboSong,KaiDang,PengWang,
+ShijieWang, JunTang, etal. Qwen2.5-vltechnicalreport. arXivpreprintarXiv:2502.13923,
+2025.
+YingshanChang,MriduNarang,HisamiSuzuki,GuihongCao,JianfengGao,andYonatanBisk.
+Webqa: Multihopandmultimodalqa. InProceedingsoftheIEEE/CVFconferenceoncomputer
+visionandpatternrecognition,pp.16495–16504,2022.
+Mingyang Chen, Tianpeng Li, Haoze Sun, Yijie Zhou, Chenzheng Zhu, Haofen Wang, Jeff Z
+Pan, Wen Zhang, Huajun Chen, Fan Yang, et al. Learning to reason with search for llms via
+reinforcementlearning. arXivpreprintarXiv:2503.19470,2025.
+YangChen,HexiangHu,YiLuan,HaitianSun,SoravitChangpinyo,AlanRitter,andMing-Wei
+Chang. Canpre-trainedvisionandlanguagemodelsanswervisualinformation-seekingquestions?
+arXivpreprintarXiv:2302.11713,2023.
+Wenqi Fan, Yujuan Ding, Liangbo Ning, Shijie Wang, Hengyun Li, Dawei Yin, Tat-Seng Chua,
+and Qing Li. A survey on RAG meeting llms: Towards retrieval-augmented large language
+models. In Ricardo Baeza-Yates and Francesco Bonchi (eds.), Proceedings of the 30th ACM
+SIGKDDConferenceonKnowledgeDiscoveryandDataMining,KDD2024,Barcelona,Spain,
+August25-29,2024,pp.6491–6501.ACM,2024. doi: 10.1145/3637528.3671470. URLhttps:
+//doi.org/10.1145/3637528.3671470.
+Yanlin Feng, Xinyue Chen, Bill Yuchen Lin, Peifeng Wang, Jun Yan, and Xiang Ren. Scal-
+able multi-hop relational reasoning for knowledge-aware question answering. arXiv preprint
+arXiv:2005.00646,2020.
+RobertFriel,MashaBelyi,andAtindriyoSanyal. Ragbench: Explainablebenchmarkforretrieval-
+augmentedgenerationsystems. arXivpreprintarXiv:2407.11005,2024.
+Yunfan Gao, Yun Xiong, Xinyu Gao, Kangxiang Jia, Jinliu Pan, Yuxi Bi, Yi Dai, Jiawei Sun,
+QianyuGuo,MengWang,andHaofenWang. Retrieval-augmentedgenerationforlargelanguage
+models: A survey. CoRR, abs/2312.10997, 2023. doi: 10.48550/ARXIV.2312.10997. URL
+https://doi.org/10.48550/arXiv.2312.10997.
+Wenbo Hu, Jia-Chen Gu, Zi-Yi Dou, Mohsen Fayyaz, Pan Lu, Kai-Wei Chang, and Nanyun
+Peng. MRAG-bench: Vision-centric evaluation for retrieval-augmented multimodal mod-
+els. In The Thirteenth International Conference on Learning Representations, 2025. URL
+https://openreview.net/forum?id=Usklli4gMc.
+JerryHuang,SiddarthMadala,RishamSidhu,ChengNiu,HaoPeng,JuliaHockenmaier,andTong
+Zhang. Rag-rl: Advancingretrieval-augmentedgenerationviarlandcurriculumlearning. arXiv
+preprintarXiv:2503.12759,2025a.
+WenxuanHuang,BohanJia,ZijieZhai,ShaoshengCao,ZheyuYe,FeiZhao,ZheXu,YaoHu,and
+ShaohuiLin. Vision-r1: Incentivizingreasoningcapabilityinmultimodallargelanguagemodels.
+arXivpreprintarXiv:2503.06749,2025b.
+DongzhiJiang,RenruiZhang,ZiyuGuo,YanminWu,JiayiLei,PengshuoQiu,PanLu,ZehuiChen,
+ChaoyouFu,GuangluSong,etal. Mmsearch: Benchmarkingthepotentialoflargemodelsas
+multi-modalsearchengines. arXivpreprintarXiv:2409.12959,2024.
+11
+
+============================================================
+第 12 页
+============================================================
+PublishedasaconferencepaperatICLR2026
+BowenJin,HansiZeng,ZhenruiYue,JinsungYoon,SercanArik,DongWang,HamedZamani,and
+JiaweiHan. Search-r1: Trainingllmstoreasonandleveragesearchengineswithreinforcement
+learning. arXivpreprintarXiv:2503.09516,2025.
+PankajJoshi,AdityaGupta,PankajKumar,andManasSisodia. Robustmultimodelragpipeline
+fordocumentscontainingtext,table&images. In20243rdInternationalConferenceonApplied
+ArtificialIntelligenceandComputing(ICAAIC),pp.993–999.IEEE,2024.
+Meng-ChiehLee,QiZhu,CostasMavromatis,ZhenHan,SojiAdeshina,VassilisNIoannidis,Huzefa
+Rangwala,andChristosFaloutsos. Agent-g: Anagenticframeworkforgraphretrievalaugmented
+generation.
+Paul Lerner, Olivier Ferret, Camille Guinaudeau, Hervé Le Borgne, Romaric Besançon, José G
+Moreno, and Jesús Lovón Melgarejo. Viquae, a dataset for knowledge-based visual question
+answeringaboutnamedentities. InProceedingsofthe45thinternationalACMSIGIRconference
+onresearchanddevelopmentininformationretrieval,pp.3108–3120,2022.
+FengLi,RenruiZhang,HaoZhang,YuanhanZhang,BoLi,WeiLi,ZejunMa,andChunyuanLi.
+Llava-next-interleave: Tacklingmulti-image,video,and3dinlargemultimodalmodels. arXiv
+preprintarXiv:2407.07895,2024.
+Xiaoxi Li, Guanting Dong, Jiajie Jin, Yuyao Zhang, Yujia Zhou, Yutao Zhu, Peitian Zhang, and
+Zhicheng Dou. Search-o1: Agentic search-enhanced large reasoning models. arXiv preprint
+arXiv:2501.05366,2025a.
+YangningLi,YinghuiLi,XinyuWang,YongJiang,ZhenZhang,XinranZheng,HuiWang,Hai-Tao
+Zheng,FeiHuang,JingrenZhou,andPhilipS.Yu. Benchmarkingmultimodalretrievalaugmented
+generation with dynamic VQA dataset and self-adaptive planning agent. In The Thirteenth
+InternationalConferenceonLearningRepresentations,2025b. URLhttps://openreview.
+net/forum?id=VvDEuyVXkG.
+WeizheLinandBillByrne. Retrievalaugmentedvisualquestionansweringwithoutsideknowledge.
+arXivpreprintarXiv:2210.03809,2022.
+Weizhe Lin, Jinghong Chen, Jingbiao Mei, Alexandru Coca, and Bill Byrne. Fine-grained late-
+interactionmulti-modalretrievalforretrievalaugmentedvisualquestionanswering,2023. URL
+https://arxiv.org/abs/2309.17133.
+Ben Liu, Jihai Zhang, Fangquan Lin, Cheng Yang, Min Peng, and Wotao Yin. Symagent: A
+neural-symbolicself-learningagentframeworkforcomplexreasoningoverknowledgegraphs. In
+ProceedingsoftheACMonWebConference2025,pp.98–108,2025a.
+Zhenghao Liu, Xingsheng Zhu, Tianshuo Zhou, Xinyi Zhang, Xiaoyuan Yi, Yukun Yan, Yu Gu,
+GeYu,andMaosongSun. Benchmarkingretrieval-augmentedgenerationinmulti-modalcontexts.
+CoRR,abs/2502.17297,2025b. doi: 10.48550/ARXIV.2502.17297. URLhttps://doi.org/
+10.48550/arXiv.2502.17297.
+ZhenghaoLiu,XingshengZhu,TianshuoZhou,XinyiZhang,XiaoyuanYi,YukunYan,GeYu,and
+Maosong Sun. Benchmarking retrieval-augmented generation in multi-modal contexts. arXiv
+preprintarXiv:2502.17297,2025c.
+Kenneth Marino, Mohammad Rastegari, Ali Farhadi, and Roozbeh Mottaghi. Ok-vqa: A visual
+questionansweringbenchmarkrequiringexternalknowledge. InProceedingsoftheIEEE/cvf
+conferenceoncomputervisionandpatternrecognition,pp.3195–3204,2019.
+ZhenyuPan,HaozhengLuo,ManlingLi,andHanLiu. Chain-of-action: Faithfulandmultimodal
+questionansweringthroughlargelanguagemodels. arXivpreprintarXiv:2403.17359,2024.
+DavidRein,BettyLiHou,AsaCooperStickland,JacksonPetty,RichardYuanzhePang,JulienDirani,
+JulianMichael,andSamuelRBowman. Gpqa: Agraduate-levelgoogle-proofq&abenchmark. In
+FirstConferenceonLanguageModeling,2024.
+12
+
+============================================================
+第 13 页
+============================================================
+PublishedasaconferencepaperatICLR2026
+ZhiliShen, ChenxinDiao, PavlosVougiouklis, PascualMerita, ShriramPiramanayagam, Enting
+Chen,DamienGraux,AndreMelo,RuofeiLai,ZerenJiang,etal. Gear: Graph-enhancedagent
+forretrieval-augmentedgeneration. arXivpreprintarXiv:2412.18431,2024.
+Aditi Singh, Abul Ehtesham, Saket Kumar, and Tala Talaei Khoei. Agentic retrieval-augmented
+generation: Asurveyonagenticrag. arXivpreprintarXiv:2501.09136,2025.
+GeminiTeam, RohanAnil, SebastianBorgeaud, Jean-BaptisteAlayrac, JiahuiYu, RaduSoricut,
+JohanSchalkwyk,AndrewMDai,AnjaHauth,KatieMillican,etal. Gemini: afamilyofhighly
+capablemultimodalmodels. arXivpreprintarXiv:2312.11805,2023.
+HarshTrivedi,NiranjanBalasubramanian,TusharKhot,andAshishSabharwal. musique:Multihop
+questionsviasingle-hopquestioncomposition. TransactionsoftheAssociationforComputational
+(cid:15)
+Linguistics,10:539–554,2022.
+Liang Wang, Haonan Chen, Nan Yang, Xiaolong Huang, Zhicheng Dou, and Furu Wei. Chain-
+of-retrieval augmented generation. ArXiv, abs/2501.14342, 2025a. URL https://api.
+semanticscholar.org/CorpusID:275906944.
+WeiyunWang,ZhangweiGao,LixinGu,HengjunPu,LongCui,XingguangWei,ZhaoyangLiu,
+Linglin Jing, Shenglong Ye, Jie Shao, et al. Internvl3. 5: Advancing open-source multimodal
+modelsinversatility,reasoning,andefficiency. arXivpreprintarXiv:2508.18265,2025b.
+WenyaWangandSinnoPan.Deepinductivelogicreasoningformulti-hopreadingcomprehension.In
+Proceedingsofthe60thAnnualMeetingoftheAssociationforComputationalLinguistics(Volume
+1: LongPapers),pp.4999–5009,2022.
+YiqiWang,WentaoChen,XiaotianHan,XudongLin,HaitengZhao,YongfeiLiu,BohanZhai,Jianbo
+Yuan,QuanzengYou,andHongxiaYang. Exploringthereasoningabilitiesofmultimodallarge
+languagemodels(mllms): Acomprehensivesurveyonemergingtrendsinmultimodalreasoning.
+arXivpreprintarXiv:2401.06805,2024.
+PengXia,PengXia,KangyuZhu,HaoranLi,HaoranLi,WeijiaShi,ShengWang,LinjunZhang,
+James Zou, and Huaxiu Yao. Mmed-rag: Versatile multimodal rag system for medical vision
+languagemodels. ArXiv,abs/2410.13085,2024. URLhttps://api.semanticscholar.
+org/CorpusID:273403866.
+ZhilinYang,PengQi,SaizhengZhang,YoshuaBengio,WilliamWCohen,RuslanSalakhutdinov,
+andChristopherDManning. Hotpotqa: Adatasetfordiverse, explainablemulti-hopquestion
+answering. arXivpreprintarXiv:1809.09600,2018.
+HanZhang,LangshiZhou,andHanfangYang. Learningtoretrieveandreasononknowledgegraph
+throughactiveself-reflection. arXivpreprintarXiv:2502.14932,2025.
+PenghaoZhao,HailinZhang,QinhanYu,ZhengrenWang,YuntengGeng,FangchengFu,LingYang,
+WentaoZhang,JieJiang,andBinCui. Retrieval-augmentedgenerationforai-generatedcontent: A
+survey. arXivpreprintarXiv:2402.19473,2024.
+XuZheng,ZiqiaoWeng,YuanhuiyiLyu,LutaoJiang,HaiweiXue,BinRen,DandaPaudel,Nicu
+Sebe,LucVanGool,andXumingHu. Retrievalaugmentedgenerationandunderstandinginvision:
+Asurveyandnewoutlook. arXivpreprintarXiv:2503.18016,2025a.
+Yaowei Zheng, Richong Zhang, Junhao Zhang, Yanhan Ye, Zheyan Luo, Zhangchi Feng, and
+YongqiangMa. Llamafactory: Unifiedefficientfine-tuningof100+languagemodels. InPro-
+ceedingsofthe62ndAnnualMeetingoftheAssociationforComputationalLinguistics(Volume3:
+SystemDemonstrations),Bangkok,Thailand,2024.AssociationforComputationalLinguistics.
+URLhttp://arxiv.org/abs/2403.13372.
+YuxiangZheng,DayuanFu,XiangkunHu,XiaojieCai,LyumanshanYe,PengruiLu,andPengfei
+Liu. Deepresearcher: Scalingdeepresearchviareinforcementlearninginreal-worldenvironments.
+arXivpreprintarXiv:2504.03160,2025b.
+JunjieZhou,ZhengLiu,ZeLiu,ShitaoXiao,YuezeWang,BoZhao,ChenJasonZhang,DefuLian,
+andYongpingXiong. Megapairs: Massivedatasynthesisforuniversalmultimodalretrieval. arXiv
+preprintarXiv:2412.14475,2024.
+13
+
+============================================================
+第 14 页
+============================================================
+Appendix
+Contents
+A UseofLargeLanguageModels 15
+B RelatedWork 15
+B.1 MultimodalRAGBenchmarks . . . . . . . . . . . . . . . . . . . . . . . . . . . . 15
+B.2 AgenticSearch-EnhancedReasoning . . . . . . . . . . . . . . . . . . . . . . . . . 15
+B.3 Structure-AwareBenchmarks . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 15
+C DataExample 16
+C.1 Image-InitiatedChain . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 16
+C.2 Text-InitiatedChain . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 17
+C.3 TextChain . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 17
+C.4 ParallelVisual-TextualFork . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 18
+C.5 Multi-ImagesFork . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 19
+D BaselineRAGPerformance 20
+D.1 Single-StepRAGBaseline . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 20
+D.2 TraditionalMulti-modalRAGBaseline. . . . . . . . . . . . . . . . . . . . . . . . . 21
+E DatasetStatistics 22
+F DatasetQualityVerification 22
+G Cross-ModelandHumanConsistencyAnalysis 23
+G.1 Cross-ModelLLM-as-JudgeConsistency . . . . . . . . . . . . . . . . . . . . . . 23
+G.2 HumanandLLM-as-JudgeAgreement . . . . . . . . . . . . . . . . . . . . . . . . 23
+G.3 Cross-ModelGround-TruthConsistency . . . . . . . . . . . . . . . . . . . . . . . 24
+H Fine-GrainedImprovementAnalysisofSEARCH-ALIGN 24
+I SEARCH-ALIGNFine-tuningDetails 25
+J SoftHPSEvaluationwithThresholdedSemanticMatching 26
+K EvaluationunderTop-kRetrieval 26
+K.1 Under-andOver-RetrievalunderRetrieval@K . . . . . . . . . . . . . . . . . . . 26
+K.2 SEARCH-ALIGNunderRetrieval@K . . . . . . . . . . . . . . . . . . . . . . . . 27
+L AgenticMM-RAGCaseStudy 28
+L.1 SuccessCase . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 28
+L.2 FailureCase . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 29
+M TheoreticalJustificationofTopologyDesigns 30
+M.1 ProblemFormulation . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 30
+M.2 ProofbyExhaustion . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 30
+M.3 Conclusion . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 30
+N PromptforDataConstruction 31
+N.1 Image-InitiatedChain . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 31
+N.2 ParallelImage-TextFork . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 31
+N.3 Text-InitiatedChain . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 32
+N.4 Multi-ImagesFork . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 32
+N.5 TextChain . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 32
+O PromptTemplateforAgenticMM-RAGPipeline 34
+P PromptTemplateforLLM-as-Judge 35
+14
+
+============================================================
+第 15 页
+============================================================
+PublishedasaconferencepaperatICLR2026
+A USE OF LARGE LANGUAGE MODELS
+Duringthepreparationofthispaper,wemadecontrolleduseofLLMs,specificallyChatGPT,asan
+auxiliarywritingtool. TheLLMwasemployedsolelyforstylisticrefinement,namelytoimprove
+the fluency, grammar, and readability of paragraphs that were originally drafted by the authors.
+Importantly,thescientificcontent,methodology,experimentaldesign,andmainnarrativeofthepaper
+werefullyconceived,written,andvalidatedbytheauthorswithoutrelianceonLLMs. Therefore,
+LLMsservedpurelyinasupportiveroleforpolishingauthor-writtentext,andtheircontributiondoes
+notrisetothelevelofco-authorship.
+B RELATED WORK
+Weorganizetherelatedworkfromthreecomplementaryperspectives: (1)multimodalRAGbench-
+marksthatextendretrievalbeyondtext,(2)agenticRAGsystemsthatmodelretrievalasasequential
+decisionprocess,and(3)structure-awarebenchmarks.
+B.1 MULTIMODALRAGBENCHMARKS
+MM-RAG extends retrieval-augmented generation beyond text by incorporating image evidence
+for knowledge-intensive, cross-modal reasoning (Xia et al., 2024; Chang et al., 2022; Pan et al.,
+2024). Existingbenchmarksoffervaluablefirststepsbutremainlimited: mostadoptsimpleQA
+formatswithfixedretrieve-then-generatepipelines(Marinoetal.,2019;Huetal.,2025;Changetal.,
+2022;Amirshahietal.,2025;Frieletal.,2024),performlimitedvisualseekingthatreducesimage
+informationtocaptions(Changetal.,2022;Lerneretal.,2022;Chenetal.,2023),restrictreasoning
+to 1–2-hop retrievals in VQA-style tasks (Li et al., 2025b; Liu et al., 2025c), and lack step-wise
+annotationsorexplicitreasoningstructures. TheseconstraintshinderdiagnosingwhetherMLLMs
+genuinelyperformstructuredmultimodalreasoningormerelyexploitshortcuts. Toaddressthis,We
+introduceMC-SEARCH,whichprovidesHAVE-verifiedlongtrajectoriesacrossdiversereasoning
+topologiesenablingfine-grainedattributionandcomprehensiveanalysisofMLLMs’long-horizon,
+search-enhancedreasoning.
+B.2 AGENTICSEARCH-ENHANCEDREASONING
+Recentworkreframesretrievalasasequentialdecisionprocess,givingrisetoagenticRAGsystems
+that decompose queries, adaptively retrieve evidence, and synthesize knowledge from retrieved
+contexts (Wang et al., 2025a; Li et al., 2025a; Zheng et al., 2025b; Singh et al., 2025; Pan et al.,
+2024). Supervisedfine-tuning(Lietal.,2025a)andreinforcementlearningmethods(Chenetal.,
+2025;Jinetal.,2025)furtheralignmodelbehaviorwithground-truthreasoningtracestoenhance
+interpretability and grounding fidelity. However, these advances remain largely text-only, often
+targeting multihopQA (Trivedi et al.,2022; Yanget al.,2018) or scientificdomains (Reinet al.,
+2024),andthuslacksystematicstudyofhowmultimodalsignalsaffectretrievalplanningandstep-
+wise supervision in MLLMs, and how different search-enhanced reasoning topologies influence
+modelbehavior. Ourworkaddressesthisgapbyintroducingamultimodalbenchmarkwithdiverse
+search-enhancedreasoningstructures,step-wiseverifiedlongreasoningchains,andprocess-level
+metrics,revealingchallengessuchasmodality-misalignedplanning,under-andover-retrieval,and
+errortaxonomy,andbyproposingSEARCH-ALIGNtoimproveplanningandretrievalfidelitythrough
+step-wisesupervision.
+B.3 STRUCTURE-AWAREBENCHMARKS
+ArelatedlineofworkinvestigatesreasoningmodelsoperatingoversymbolicKBsorgraphs,often
+withschema-constrainedqueriesorspecializedtools(Leeetal.;Shenetal.,2024;Zhangetal.,2025;
+Wang&Pan,2022;Fengetal.,2020;Liuetal.,2025a). Theseimprovesymbolicgroundingbut
+mainlyfocusonwhattoretrieve. Incontrast,benchmarkingagenticMM-RAGrequiressupervision
+overthestructureoftheretrievalchainitself—coveringinitiationmodality,hoporder,andparallelvs.
+serialpatterns. Toourknowledge,nopriormultimodaldatasetprovidessuchstructured,step-wisean-
+notations. OurSearch-MMfillsthisgapbysupplyinggoldenreasoningchainswithmodality-specific
+retrievalsteps,enablingfine-grainedattribution,analysisofover-/under-retrieval,andevaluationof
+diversemultimodalreasoningstructures.
+15
+
+============================================================
+第 16 页
+============================================================
+PublishedasaconferencepaperatICLR2026
+C DATA EXAMPLE
+C.1 IMAGE-INITIATEDCHAIN
+ExampleReasoningChain—Image-InitiatedChain
+MainQuestion.WhatbiblicalscenefeaturingArchangel
+Gabriel is depicted in the image, where is this painting
+currentlyheld, whenandforhowmuchwasitacquired
+forthecollection,andwhathistoricalsignificancedidthis
+acquisitionrepresentfortheartistregardingAmericanmu-
+seums?
+Final Answer. The painting depicts the Annunciation
+scene, is held by the Philadelphia Museum of Art, was
+acquiredonApril5,1899for$1,750,anditwasTanner’s
+firstworktobepurchasedbyanAmericanmuseum.
+ReasoningChain(4steps):
+1. (Image)WhatbiblicalscenefeaturingArchangel
+Gabrielisdepictedintheimage?
+ImageEvidenceID:30332773
+Answer:TheAnnunciation.
+2. (Text)Whichmuseumholdsthispainting?
+TextEvidenceID:
+d5be2ae00dba11ecb1e81171463288e9_0
+Answer:PhiladelphiaMuseumofArt.
+Caption:ArchangelGabrielfromanAnnunciation-
+GoogleArtProject 3. (Text)Whenandforwhatpricewasthepainting
+acquiredforthecollection?
+TextEvidenceID:
+d5be2ae00dba11ecb1e81171463288e9_1
+Answer:April5,1899for$1,750.
+4. (Text) What was the historical significance of
+thisacquisitionfortheartistregardingAmerican
+museums?
+TextEvidenceID:
+d5be2ae00dba11ecb1e81171463288e9_8
+Answer: It was Tanner’s first work to be pur-
+chasedbyanAmericanmuseum.
+16
+
+============================================================
+第 17 页
+============================================================
+PublishedasaconferencepaperatICLR2026
+C.2 TEXT-INITIATEDCHAIN
+ExampleReasoningChain—Text-InitiatedChain
+Main Question. Does the image visually confirm
+Solvang’s unique cultural character as described in the
+text?
+FinalAnswer.Yes,theimageprominentlyfeaturesalarge
+windmillandbuildingswithdistinctEuropean/Danishar-
+chitecturalstyles,aligningwiththedescriptionofSolvang
+as“abitofDenmark”inCalifornia.
+ReasoningChain(2steps):
+1. (Text)HowisSolvangculturallycharacterized
+accordingtothetext?
+Caption:SolvangCaliforniaWindmill. TextEvidenceID:
+d5bd142a0dba11ecb1e81171463288e9_7
+Answer: Solvangisdescribedas“abitofDen-
+marktuckedintothisbeautifulCalifornia.”
+2. (Image) Does the image visually confirm this
+culturalcharacterization,andifso,how?
+ImageEvidenceID:30326437
+Answer:Yes,theimageprominentlydisplaysa
+largewindmillandbuildingswithdistinctEuro-
+pean/Danisharchitecturalstyles,confirmingits
+culturaldescription.
+C.3 TEXTCHAIN
+ExampleReasoningChain—TextChain
+MainQuestion. WhatarethekeyattributesoftheBentleyMulsanne,includingitsmanufacturing
+period,enginespecifications,originofitsname,andnotablespecialeditions?
+FinalAnswer.TheBentleyMulsanne,afull-sizeluxurycarmanufacturedfrom2010to2020,isnamed
+aftertheMulsanneCorneroftheLeMansracingcircuit.Itusesa6.75LBentleyLSeriesV8engine,
+andanotablespecialeditionisthe“W.O.Edition”,whichfeaturesapieceofW.O.Bentley’spersonal
+carcrankshaft.
+ReasoningChain(3steps):
+1. (Text)WhattypeofvehicleistheBentleyMulsanne,whenwasitmanufactured,andwhatis
+theoriginofitsname?
+TextEvidenceID:d5bd6ace0dba11ecb1e81171463288e9_15
+Answer:TheBentleyMulsanneisafull-sizeluxurycarthatwasmanufacturedfrom2010to
+2020andisnamedaftertheMulsanneCorneroftheLeMansracingcircuit.
+2. (Text)WhataretheenginespecificationsoftheBentleyMulsanne?
+TextEvidenceID:d5bd6ace0dba11ecb1e81171463288e9_6
+Answer:TheMulsanneusesa6.75L(6,750cc/411in³)BentleyLSeriesV8engine,modified
+tomeetEuroVemissionsregulations.
+3. (Text)WhatnotablespecialeditionoftheMulsannewasintroducedandwhatwasitsunique
+feature?
+TextEvidenceID:d5bd6ace0dba11ecb1e81171463288e9_11
+Answer: TheMulsanne“W.O.Edition”waspresented,featuringapieceofthecrankshaft
+fromW.O.Bentley’spersonalcardisplayedinthearmrest.
+17
+
+============================================================
+第 18 页
+============================================================
+PublishedasaconferencepaperatICLR2026
+C.4 PARALLELVISUAL-TEXTUALFORK
+ExampleReasoningChain—ParallelVisual-TextualFork
+Main Question. Given the appearance of the mandolin
+shown, how did Pasquale Vinaccia’s 1835 innovation in-
+volving string material lead to structural changes in the
+instrumentanditslastingimpactonmandolindesign?
+FinalAnswer.PasqualeVinaccia’s1835innovationofus-
+ingsteelwirestrings,whicharevisibleonthemandolin,
+necessitatedstrengtheningthebodyanddeepeningthebowl
+forincreasedresonance,andthismethodofstringingulti-
+matelybecamethedominantwayformandolins.
+ReasoningChain(4steps):
+1. (Image)Whattypeofstringsarevisibleonthe
+mandolindepicted,andhowdoesthisvisualdetail
+relatetoPasqualeVinaccia’shistoricalimprove-
+mentstotheinstrument?
+Caption:Mandolin1. ImageEvidenceID:30204742
+Answer: The mandolin prominently displays
+wire/steelstrings.”
+2. (Text) What structural modifications were
+subsequently required for the mandolin’s body
+duetotheadoptionofthesenewwirestrings?
+TextEvidenceID:
+d5be68020dba11ecb1e81171463288e9_15
+Answer:Thewirestringsnecessitatedstrengthen-
+ingthebodyanddeepeningthebowl.
+3. (Text) What specific acoustic quality was
+enhancedbydeepeningthemandolin’sbowlasa
+consequenceofthesestructuralchanges?
+TextEvidenceID:
+d5be68020dba11ecb1e81171463288e9_3
+Answer: Deepening the bowl increased tonal
+resonance.
+4. (Text) Considering these improvements, what
+wasthelong-termimpactofVinaccia’sdecision
+to use steel strings on mandolin design and
+construction?
+TextEvidenceID:
+d5be68020dba11ecb1e81171463288e9_5
+Answer:Hissteel-stringingapproachbecamethe
+dominantwayofstringingmandolins.
+18
+
+============================================================
+第 19 页
+============================================================
+PublishedasaconferencepaperatICLR2026
+C.5 MULTI-IMAGESFORK
+ExampleReasoningChain—Multi-ImagesFork
+MainQuestion. WhichofthedepictedEpcotpavilions,
+theCanadaorMorocco,featuresaprominenttall,slender
+towerasitsmainarchitecturalcenterpiece,andwhatisits
+historicalsignificanceregardingitsadditiontotheWorld
+Showcase?
+FinalAnswer.TheMoroccoPavilionfeaturesaprominent
+tall,slendertower,anditwashistoricallysignificantasthe
+firstexpansionpavilionaddedtoWorldShowcase,opening
+onSeptember7,1984.
+ReasoningChain(4steps):
+1. (Image)Whatisthemostprominentfeatureof
+Caption:CanadaPavilion
+theroofstructureshownonthemainbuilding,
+theCanadaPavilion?
+ImageEvidenceID:30383576
+Answer: Averysteep, multi-tieredgreenroof
+withpointedspires.
+2. (Image) What is the most prominent architec-
+turalfeaturedefiningtheskylineofthebuilding
+intheMoroccoPavilion?
+ImageEvidenceID:30021436
+Answer:Atall,rectangulartowertoppedwitha
+smalldome.
+3. (Image)Consideringthecontrastinprimaryver-
+ticalarchitecturalelementsbetweentheCanada
+Caption:MoroccoPavilion
+Pavilion’ssteeproofandtheMoroccoPavilion’s
+tower, which of these two pavilions would be
+best described as featuring a prominent tower
+ratherthanaverysteeproof?
+ImageEvidenceID:30021436
+Answer:TheMoroccoPavilion.
+4. (Text) According to the provided text, what
+significanthistoricalfactisassociatedwiththe
+MoroccoPavilionregardingitsstatusasaWorld
+Showcaseaddition?
+TextEvidenceID:
+d5bef66e0dba11ecb1e81171463288e9_7
+Answer: It was the first expansion pavilion
+to be added to World Showcase, opening on
+September7,1984.
+19
+
+============================================================
+第 20 页
+============================================================
+PublishedasaconferencepaperatICLR2026
+D BASELINE RAG PERFORMANCE
+D.1 SINGLE-STEPRAGBASELINE
+Table5reportstheresultsofthefixed-stepRAGbaselineunderthesingle-stepretrievalsetting. For
+allexperiments,weusetheBAAI/bge-large-en-v1.5(Zhouetal.,2024)embeddingmodel
+for dense retrieval. If the input question contains images, the system performs a one-step image
+retrievaltoobtainthecorrespondingcaption,whichisthenconcatenatedwiththequerybeforebeing
+fedintothemodel. Iftheinputispurelytextual,thequeryitselfisusedforone-steptextretrieval. In
+bothcases,onlythetop-1retrievedpassageisselectedascontextandappendedtotheinputprompt.
+ToensureafaircomparisonwithagenticmultimodalRAG,weenforcethesameevaluationpolicy:
+modelsareonlyallowedtooutputananswerwhentheyaresufficientlyconfident,otherwisethey
+mustabstain. Thisconstraintavoidsartificiallyinflatingaccuracybyforcingguessesandreflectsthe
+practicalreliabilityofmodelsinknowledge-groundedsettings.
+Our results reveal a clear contrast between model families. More robust agentic models (e.g.,
+proprietaryGemini-2.5-Pro)tendtobeconservative: whenprovidedwithonlyasingleretrieved
+knowledge piece, they often judge the evidence as insufficient and refrain from answering. In
+contrast,mostopen-sourcemodels(e.g.,InternVL-3.5-Pro,Qwen2.5-VL-7B)displayoverconfidence,
+attemptingtogeneratecompleteanswersevenwhentheretrievedcontextistoolimited. Whilethis
+behaviorleadstosuperficiallyhigheraccuracyunderfixed-stepevaluation,italsoexposesaweakness
+ofthefixedRAGparadigm: relyingonasingleevidencepiecefrequentlyfailstosupportcomplex
+reasoning,producingshalloworunsupportedanswers.
+Table5: EvaluationofvariousmodelsontheMC-Searchbenchmarkundersingle-stepRAG.
+AnswerAccuracy ChainAlignment
+ReasonGraphs Model GoldenF1(↑)
+F1(↑) ∆F1(↑) LJ(↑) HPS(↑) RD(↓)
+GPT-4o-Mini 27.50 27.48 1.69 61.90
+Gemini-2.5-Flash 10.88 10.81 0.75 67.72
+Gemini-2.5-Pro 11.11 11.10 0.70 62.42
+Text-OnlyChain 19.22 3.00
+Claude-3.7-Sonnet 22.71 22.09 1.69 66.38
+InternVL3.5-8B 30.98 24.00 1.47 65.72
+Qwen2.5-VL-7B 35.26 26.61 1.81 61.57
+GPT-4o-Mini 29.37 27.06 0.83 68.29
+Gemini-2.5-Flash 3.63 -3.09 0.22 72.39
+Gemini-2.5-Pro 2.34 -2.51 0.13 69.83
+Image-InitiatedChain 21.52 3.00
+Claude-3.7-Sonnet 8.29 3.58 1.18 72.62
+InternVL3.5-8B 21.10 11.48 0.77 63.86
+Qwen2.5-VL-7B 40.31 22.66 1.62 60.95
+GPT-4o-Mini 25.53 20.69 1.27 59.46
+Gemini-2.5-Flash 6.49 1.58 0.56 64.40
+Gemini-2.5-Pro 7.26 3.47 0.51 61.29
+Multi-ImagesFork 15.38 3.00
+Claude-3.7-Sonnet 12.70 10.77 1.36 62.41
+InternVL3.5-8B 33.11 21.01 1.59 57.65
+Qwen2.5-VL-7B 36.96 18.36 1.89 57.04
+GPT-4o-Mini 15.20 14.87 0.77 53.98
+Gemini-2.5-Flash 4.09 2.11 0.30 57.99
+Gemini-2.5-Pro 4.04 3.40 0.32 53.46
+ParallelImage-TextFork 15.06 3.00
+Claude-3.7-Sonnet 9.61 7.83 1.22 58.51
+InternVL3.5-8B 20.63 13.94 0.99 58.82
+Qwen2.5-VL-7B 29.70 21.08 1.57 55.76
+GPT-4o-Mini 24.67 13.02 1.43 49.47
+Gemini-2.5-Flash 16.78 -0.43 1.30 66.27
+Gemini-2.5-Pro 14.51 -0.90 1.22 55.94
+Text-InitiatedChain 26.86 3.00
+Claude-3.7-Sonnet 17.63 -1.11 1.80 57.13
+InternVL3.5-8B 28.82 15.96 1.38 38.70
+Qwen2.5-VL-7B 42.97 25.84 2.48 39.86
+20
+
+============================================================
+第 21 页
+============================================================
+PublishedasaconferencepaperatICLR2026
+D.2 TRADITIONALMULTI-MODALRAGBASELINE
+Toprovideastrongerfixed-stepbaseline,weextendthesingle-stepRAGsetuptoatwo-hopvariant.
+Formultimodalqueries,wefollowthestandardmultimodalRAGpipeline(Linetal.,2023;Joshi
+etal.,2024;Lin&Byrne,2022;Zhengetal.,2025a): first,weperformimageretrievaltoobtainthe
+captionoftheinputimage. Theretrievedcaptionisconcatenatedwiththeoriginalquery,andthis
+combinedtextisthenusedtoconductasecond-steptextretrieval. Fortext-onlyqueries,wedirectly
+performtwosuccessiveroundsoftextretrieval. Inbothcases,thefinalretrievedpassage(top-1)is
+appendedascontexttotheinputofthemultimodalLLM.
+As with the single-step baseline, we require models to output an answer only when sufficiently
+confident,ensuringfaircomparisonwithagenticmultimodalRAGandavoidinginflatedaccuracy
+duetoforcedguesses. Table6presentstheresultsofthefixedtwo-hopRAGbaseline. Comparedto
+single-stepretrieval(Table5),two-hopretrievalyieldsconsistentimprovementsacrossreasoning
+structures,especiallyformultimodalcasessuchasMulti-ImagesForkandText-Initiatedchains. This
+confirmsthatadditionalretrievalstepscanpartiallymitigatetheinformationbottleneckofsingle-hop
+retrievalbyprovidingmorecontext.
+However, performance still lags behind agentic multimodal RAG. While fixed two-hop retrieval
+providesmoreevidence,itcannotflexiblyadaptthenumberofretrievalsorstrategicallyintegrate
+cross-modalknowledge. Incontrast,agenticapproachesselectivelyplanmultiplehopsanddecide
+when to stop, yielding more faithful reasoning chains and substantially higher overall accuracy.
+Theseresultshighlightboththeutilityandthelimitationsoffixedtwo-hopRAG:itisstrongerthan
+single-stepretrievalbutremainsrigidandlessreliablethanadaptiveagenticmultimodalRAG.
+Table6: EvaluationofvariousmodelsontheMC-SearchbenchmarkundertraditionalMM-RAG.
+AnswerAccuracy ChainAlignment
+ReasonGraphs Model GoldenF1(↑)
+F1(↑) ∆F1(↑) LLJ(↑) HPS(↑) RD(↓)
+GPT-4o-Mini 35.61 33.30 1.58 68.29
+Gemini-2.5-Flash 7.42 0.70 0.32 72.39
+Gemini-2.5-Pro 6.06 1.21 0.25 69.83
+ImageInitiatedChain 21.11 2.42
+Claude-3.7-Sonnet 21.72 21.10 1.72 72.62
+InternVL3.5-8B 31.26 21.64 1.24 63.86
+Qwen2.5-VL-7B 39.59 21.94 1.79 60.95
+GPT-4o-Mini 27.88 23.04 1.04 59.46
+Gemini-2.5-Flash 10.29 5.38 0.56 64.40
+Gemini-2.5-Pro 11.03 7.24 0.57 61.29
+Multi-ImagesFork 19.35 2.76
+Claude-3.7-Sonnet 19.96 15.25 1.67 62.41
+InternVL3.5-8B 34.55 22.45 1.58 57.65
+Qwen2.5-VL-7B 36.61 18.01 1.97 57.04
+GPT-4o-Mini 19.68 19.35 1.53 53.98
+Gemini-2.5-Flash 5.19 3.21 0.26 57.99
+Gemini-2.5-Pro 4.03 3.39 0.21 53.46
+ParallelImage-TextFork 10.87 3.18
+Claude-3.7-Sonnet 15.80 13.87 1.45 58.51
+InternVL3.5-8B 23.83 17.14 1.14 58.82
+Qwen2.5-VL-7B 30.16 21.54 1.61 55.76
+GPT-4o-Mini 28.23 16.58 1.53 49.47
+Gemini-2.5-Flash 20.51 3.30 1.19 66.27
+Gemini-2.5-Pro 17.60 2.19 1.03 55.94
+Text-InitiatedChain 26.72 1.90
+Claude-3.7-Sonnet 25.55 23.77 2.20 57.13
+InternVL3.5-8B 30.80 17.94 1.47 38.70
+Qwen2.5-VL-7B 41.80 24.67 2.47 39.86
+21
+
+============================================================
+第 22 页
+============================================================
+PublishedasaconferencepaperatICLR2026
+E DATASET STATISTICS
+Table7providesadetailedbreakdownoftheMC-Searchbenchmark. Thedatasetcontainsatotal
+of3,333multimodalreasoningsamplesspanningfiverepresentativereasoningstructures,withthe
+largestportionbeingImage-InitiatedChains(1,306samples),followedbyTextChains(945samples)
+andParallelVisual-TextualForks(680samples). Althoughsmallerinsize,Text-InitiatedChains(169
+samples)andMulti-ImagesForks(233samples)introducechallengingcasesthatrequireexplicit
+cross-modalormulti-imageintegration.
+Thebenchmarkisgroundedinalarge-scaleknowledgebasecontainingnearly390Kimagesand
+780Ktextualdocuments,ensuringbroadcoverageacrossbothmodalities. Onaverage,questions
+are33tokenslong,whileanswersarelongerandentity-rich(47tokenswith8entitiesonaverage),
+reflectingthecomplexityofthetasks.
+Intermsofreasoningdepth,theaveragenumberofhopsvariesbystructure,rangingfrom3.17in
+Text-InitiatedChainstoaround4inParallelVisual-TextualForks,demonstratingthediversityof
+reasoningcomplexity. Acrossallsamples,themajorityofhopsrelyontextretrieval(79.7%),while
+imageretrievalaccountsforroughlyone-fifth(20.2%),highlightingabalancedyettext-dominant
+modalitydistribution.
+Table7: StatisticsofMC-Searchbenchmark.
+Statistic Number
+ParallelVisual-TextualForkSamples 680
+Image-InitiatedChainSamples 1,306
+TextChainSamples 945
+Text-InitiatedChainSamples 169
+Multi-ImagesForkSamples 233
+TotalSamples 3,333
+TotalImagesintheKnowledgeBase 389,750
+TotalDocumentsintheKnowledgeBase 784,473
+Avg.QuestionLength 33.23
+Avg.AnswerLength 47.40
+Avg.AnswerEntities 8.03
+Avg.HopsinParallelVisual-TextualFork 4.01
+Avg.HopsinImage-InitiatedChain 3.82
+Avg.HopsinTextChain 3.65
+Avg.HopsinText-InitiatedChain 3.17
+Avg.HopsinMulti-ImagesFork 3.97
+HopswithTextRetrieval 10,063(79.72%)
+HopswithImageRetrieval 2,550(20.20%)
+F DATASET QUALITY VERIFICATION
+Toassessdatasetquality,weemployedGemini-2.5-Protoscoreeachgoldreasoningchainalong
+fourdimensions: (i)factualcorrectness,(ii)stepnecessity,(iii)clarity,and(iv)multimodalalignment.
+Scoresareintegersfrom1(poor)to5(perfect),withtheoverallscoredefinedastheaverageofthe
+four. Table8summarizestheresults.
+Table8: AverageGemini-2.5-Proevaluationscores.
+Dimension AverageScore
+Factualcorrectness 4.93
+Stepnecessity 4.70
+Clarity 4.88
+Multimodalalignment 4.95
+Overall(mean) 4.87
+22
+
+============================================================
+第 23 页
+============================================================
+PublishedasaconferencepaperatICLR2026
+G CROSS-MODEL AND HUMAN CONSISTENCY ANALYSIS
+WereportanadditionalconsistencystudytoassessthestabilityoftheLLM-as-Judge(LLJ)evaluation.
+AgreementacrossheterogeneousmodelfamiliesandhumanexpertsshowsthatLLJscoringcaptures
+objectiveandbroadlyapplicablequalitycriteria,withnoobservabledependenceonthepreferred
+reasoningpatternsoftheprimaryjudgingmodel(Gemini-2.5-Pro)usedinourexperiments.
+G.1 CROSS-MODELLLM-AS-JUDGECONSISTENCY
+Werandomlysamplefivenon-overlappingsubsets(each10%)ofpredictionsgeneratedbytheGemini-
+2.5-ProbackboneinTable3. Eachsubsetisindependentlyrescoredbythreeheterogeneousmodel
+families: Gemini-2.5-Pro,GPT-5,andQwen-VL-Plus. Foreachpairofjudges,wecomputePearson
+correlation,Spearmanrankcorrelation,Bland–Altmanmeanbias,andlimitsofagreement(LoA).
+Table9reportsthemeanandvarianceoftheconsistencyscoreacrossfivesubsets.
+Table9: Cross-modelLLJconsistencyscores,withmean(variance)reported. Highcorrelationsand
+smallmeanbiasesindicatestrongagreementacrossevaluatorfamilies.
+EvaluatorPair Pearson Spearman MeanBias LoA
+Gemini/GPT-5 0.9330(0.00076) 0.8720(0.00120) +0.0288(0.00051) 0.8438(0.07937)
+Gemini/Qwen 0.9147(0.00116) 0.8145(0.00360) −0.0083(0.00082) 0.9295(0.08834)
+GPT-5/Qwen 0.9147(0.00131) 0.8259(0.00374) −0.0371(0.00212) 0.9341(0.09565)
+AllevaluatorpairsshowPearsoncorrelationsabove0.91andSpearmancorrelationsabove0.81.Mean
+biasesremainsmallinmagnitude(< 0.04),andLoArangesarenarrowandstable. Theseresults
+indicatethattheLLJevaluatorgeneratesconsistentassessmentsacrossmodelfamilieswithdiverse
+trainingdataandarchitectures. Notably,thescoresdonotdisplayanypreferentialtendencytoward
+answersproducedbyGemini-2.5-Pro,despiteitbeingtheprimaryjudgeinourmainevaluation.
+Tofurtherillustratethis,weprovideHexbincorrelationplotsbetweenGemini-2.5-ProandGPT-5
+across all scoring dimensions (Accuracy, Alignment, Coverage, Coherence, and Entities). The
+distributionsconcentratetightlyaroundthediagonal,confirmingthattheLLJscoresfollowobjective,
+generalizableevaluationcriteriaratherthanmodel-specificpatterns.
+Figure6: HexbinplotsofGemini-2.5-Provs. GPT-5scoresacrossfourLLJdimensions.
+G.2 HUMANANDLLM-AS-JUDGEAGREEMENT
+WeadditionallycompareLLJscoresagainsthumanannotationscollectedfromcomputer-science
+PhDexpertson100randomlysampledpredictions. HumansscoreeachsamplealongthefourLLJ
+dimensions. Table10reportscorrelationsandBland–Altmanstatisticsbetweenhumanscoresand
+Gemini-2.5-ProscoresforpredictionsgeneratedbytheGemini-2.5-Probackbone.
+Overall,theLLJscorescloselytrackhumanjudgmentsacrossallcontent-groundeddimensions,with
+Pearsoncorrelationsabove0.92forAccuracy, EntityCoverage, andtheStackedscore. Evenfor
+themoresubjectiveCoherencedimension,rank-orderagreementremainsstrong(Spearman=0.82),
+confirmingthattheLLJevaluationprovidesreliableandhuman-alignedqualityassessments.
+23
+
+============================================================
+第 24 页
+============================================================
+PublishedasaconferencepaperatICLR2026
+Table10: Human–LLJagreementscores.
+Dimension Pearson Spearman MeanBias LoA
+Accuracy 0.9632 0.9556 +0.0800 0.6606
+EntityCoverage 0.9375 0.8691 +0.1200 0.9309
+Coherence 0.6061 0.8200 −0.0200 0.6778
+Alignment 0.9275 0.7925 +0.2750 0.9982
+StackedScore 0.9323 0.8675 +0.1138 0.8562
+G.3 CROSS-MODELGROUND-TRUTHCONSISTENCY
+ToexaminewhethertheagenticMM-RAGpipelinedependsonmodel-specificphrasingorsyntactic
+patterns in the reference reasoning chains, we construct an alternative benchmark using ground
+truthgeneratedbyadifferentmodelfamily. Foreachofthefivegraphtopologies,werandomly
+sample50instancesanduseGPT-5toregenerateallintermediatesub-answersandthefinalanswer
+followingtheconstructionprocedureinSection2. TheseGPT-5chainsserveasanadditionalsetof
+ground-truthannotations.
+WethenevaluateGemini-2.5-ProandGPT-4o-miniunderthefullagenticMM-RAGpipeline. As
+showninTable11,bothmodelsachievehighlyconsistentperformanceacrossGPT-generatedand
+Gemini-generatedgroundtruths. F1andLLJscorescloselytrackeachotheracrossalltopologies,
+andtheperformanceorderingbetweenmodelsremainsstable.
+Theseresultsindicatethatthepipelineisrobusttovariationsinthesourcemodelusedtogenerate
+referencereasoningchains. Theevaluationreflectsgenuinemulti-hopreasoningabilityratherthan
+dependenceonstylisticorsyntacticartifactsthatmayfavoraspecificsourcemodelfamily.
+Table11: PerformanceofGemini-2.5-ProandGPT-4o-miniwhenevaluatedagainstground-truthreasoning
+chainsgeneratedbyGPT-5(GPTcolumns)orbytheoriginalGemini-basedconstruction(Geminicolumns).
+F1Score(↑) LLJScore(↑)
+GraphType Model
+GPT Gemini GPT Gemini
+Gemini-Pro 32.52 34.42 3.44 3.46
+TextChain
+GPT-4o-mini 26.05 26.98 3.01 3.05
+Gemini-Pro 41.37 46.57 3.82 3.81
+Image-InitiatedChain
+GPT-4o-mini 35.01 38.96 3.24 3.20
+Gemini-Pro 35.49 38.04 3.48 3.66
+Multi-ImagesFork
+GPT-4o-mini 17.97 18.77 2.69 2.80
+Gemini-Pro 36.59 38.44 3.64 3.67
+ParallelImage-TextFork
+GPT-4o-mini 21.09 21.97 2.58 2.54
+Gemini-Pro 34.91 43.71 3.42 3.82
+Text-InitiatedChain
+GPT-4o-mini 22.95 26.01 2.95 3.03
+H FINE-GRAINED IMPROVEMENT ANALYSIS OF SEARCH-ALIGN
+ToexaminehowSEARCH-ALIGNalterstheprocessbehaviorofmultimodalagents,weanalyze
+InternVL-3.5-8Bbeforeandafteralignmentusingafine-grainederrortaxonomycoveringplanning,
+retrieval,andmodalityselectionbehaviors. Foreachsample,anexternalLLMannotatesfourbinary
+errortypes:(i)Retrieval-Failure,(ii)Step-Omission,(iii)Order/Dependency-Error,and(iv)Modality-
+Mismatch. We report the proportion of examples exhibiting each error across the MC-SEARCH
+validationsplit.
+Figure7summarizestheresults. SEARCH-ALIGNleadstoconsistentreductionsacrossallfourerror
+categories,withthemostsubstantialimprovementsobservedinmodalityselectionandmulti-hop
+24
+
+============================================================
+第 25 页
+============================================================
+PublishedasaconferencepaperatICLR2026
+completeness. Modality-Mismatch decreases from 65.75% to 34.72%, indicating that the model
+learnstochoosevisualversustextualevidencemoreappropriately. Step-Omissionisalsonotably
+reduced(86.15%to73.66%),suggestingthattheagentfollowsmorecompletereasoningchainsand
+islesslikelytoskipintermediatesteps. Retrieval-FailureandOrder/Dependency-Errorshowsmaller
+butstablereductions,reflectingimprovementsinevidenceacquisitionandhopstructuring.
+Overall,thisprocess-levelanalysisshowsthatSEARCH-ALIGNdoesnotsimplyencourageimitation
+ofannotatedreasoningchains;rather,itinducesmeasurableimprovementsacrossmultipledimen-
+sionsofplanningandmultimodaldecision-making. Thesereductionsinstructurederrorpatterns
+complementthequantitativegainsreportedinansweraccuracyandalignmentmetrics.
+86.15%
+Step-Omission
+73.66%
+65.75%
+Modality-Mismatch
+34.72%
+31.06% + SEARCH-ALIGN
+Order/Dependency-Error 28.18% InternVL-3.5-8B
+80.28%
+Retrieval-Failure
+76.76%
+0 20 40 60 80 100
+Error Proportion (%)
+Figure7: ErrorproportionsbeforeandafterSEARCH-ALIGNacrossfourprocess-levelcategories.
+I SEARCH-ALIGN FINE-TUNING DETAILS
+Toalignthereasoningtrajectoriesofmultimodallargelanguagemodels(MLLMs)withgoldensearch
+chains,weperformsupervisedfine-tuning(SFT)usingtheLlama-factoryframework(Zheng
+etal.,2024). Allexperimentsareconductedon4NVIDIAA100GPUs(80GBmemoryeach). We
+reportthedetailedhyper-parameterconfigurationsforbothopen-sourcebackbonesusedinourstudy,
+namelyInternVL3.5-8BandQwen/Qwen2.5-VL-7B-Instruct. Table12summarizesallfine-tuning
+hyper-parametersinaunifiedformat.
+Forclarity,wehighlightthefollowingaspects:
+1. BackboneModels. InternVLusestheofficialInternVL3.5-8Bcheckpoint,whileQwenadoptsthe
+Qwen/Qwen2.5-VL-7B-Instructvariant.
+2. TrainingSetup. Bothmodelsarefine-tunedwithidenticaloptimizerandschedulersettings,but
+differinlearningrateandepochcountduetotheirdifferentconvergencecharacteristics.
+3. Closed-source Baselines. For proprietary models (e.g., Gemini-2.5-Pro/Flash, GPT-4.1), no
+fine-tuningisapplied. Theirinternalthinkingbudgetsremainatthedefaultvalues.
+Table 12: Fine-tuning hyper-parameters for Search-Align alignment on InternVL3.5-8B and
+Qwen/Qwen2.5-VL-7B-Instruct. Bothmodelsaretrainedon4×A100GPUs.
+Hyper-parameter InternVL3.5-8B Qwen2.5-VL-7B-Instruct
+Optimizer AdamW AdamW
+LearningRate 1e-5 1e-4
+TrainingEpochs 1 2
+Warm-upRatio 0.1 0.1
+SchedulerType Cosine Cosine
+TrainBatch(perdevice) 1 1
+GradientAccumulationSteps 8 8
+25
+
+============================================================
+第 26 页
+============================================================
+PublishedasaconferencepaperatICLR2026
+J SOFT HPS EVALUATION WITH THRESHOLDED SEMANTIC MATCHING
+TheHitperStep(HPS)metricinthemainpaperevaluateswhethertheretrievedevidenceexactly
+matchesthegoldevidenceateachreasoninghop. Becauseourmaximum-weightmatchingformula-
+tionnaturallysupportssimilarity-basedmatching,wefurtherexamineasoftHPSvariantinwhichan
+evidencepairisconsideredahitifitsembeddingsimilarityexceedsathresholdτ. Wereportresults
+for four thresholds, τ ∈ {1.0, 0.95, 0.90, 0.85}, corresponding to exact match and increasingly
+relaxedsemanticsimilarity.
+Table 13 shows that soft-HPS scores for both Gemini-2.5-Pro and Gemini-Flash increase as τ
+decreases, indicating that models often retrieve semantically related evidence even when exact
+matchesaremissed. Theimprovementsbecomesmallernearτ =0.85,suggestingthattheremaining
+errors are driven by suboptimal planning, such as imperfect question decomposition or missing
+reasoningsteps,whichpreventstheretrievalofthetrulyrelevantevidence.
+Table13: SoftHPSscoresforGemini-2.5-ProandGemini-Flashunderdifferentsimilaritythresholdsτ.
+Gemini-2.5-ProSoft-HPS Gemini-FlashSoft-HPS
+GraphType
+τ=1.0 τ=0.95 τ=0.90 τ=0.85 τ=1.0 τ=0.95 τ=0.90 τ=0.85
+TextChain 21.59 35.59 38.05 41.26 13.33 26.86 28.78 30.97
+Image-InitiatedChain 25.90 38.74 40.48 42.87 25.03 43.19 45.04 47.42
+Multi-ImagesFork 18.68 25.58 26.49 28.18 18.53 24.51 25.35 27.20
+ParallelImage-TextFork 16.74 26.25 27.68 30.22 20.73 25.68 27.12 29.69
+Text-InitiatedChain 19.51 26.31 27.81 29.88 21.67 29.94 30.55 32.03
+K EVALUATION UNDER TOP-k RETRIEVAL
+This section evaluates whether the retrieval dynamics in the main analysis hold when each step
+retrievesmultiplecandidates. Acrosstop-kretrievalsettings(k ∈ 1,3,5),theoverallconclusions
+onunder-andover-retrievalremainunchanged. WealsoevaluateSEARCH-ALIGNunderthesame
+settingsandfindthatitsimprovementsarestable,indicatingthatbothempiricalinsightsgeneralize
+reliablytobroaderretrievalregimes.
+K.1 UNDER-ANDOVER-RETRIEVALUNDERRETRIEVAL@K
+Weextendtheover-andunder-retrievalanalysistotop-k retrievalbyallowingGemini-2.5-Flash
+to retrieve the top-k evidence candidates at each step (k ∈ {1,3,5}). We evaluate ∆F1 across
+different∆Stepvalues,wherenegativevaluesindicateunder-retrievalandpositivevaluesindicate
+over-retrieval. Figure8reportstheresults.
+Under-Retrieval Over-Retrieval
+Figure8: ∆F1across∆StepvaluesforGemini-2.5-Flashundertop-kretrieval(k =1,3,5).
+26
+
+============================================================
+第 27 页
+============================================================
+PublishedasaconferencepaperatICLR2026
+Acrossallthreesettings,thequalitativetrendisconsistent. Severeunder-retrieval(∆Step< −3)
+causes large performance drops because essential evidence is skipped. As k increases, the peak
+performanceregionshiftsslightlytoward∆Stepnear−1or−2,suggestingthatadditionalretrieved
+itemshelpcoverrelevantevidenceevenwithfewerreasoningsteps. Largerkalsoamplifiesthenega-
+tiveeffectofover-retrieval: for∆Step≥4,performancedeclinesmoresteeplyduetoaccumulated
+noisyinformation. Thus,moderatedeviationsaroundtheoptimalretrievaldepthremainbeneficial,
+whilestrongunder-orover-retrievalisconsistentlydetrimental.
+K.2 SEARCH-ALIGNUNDERRETRIEVAL@K
+We further evaluate Qwen2.5-VL-7B and its SEARCH-ALIGN variant under the same retrieval
+settings. Table14reportsF1,∆F1,HitperStep,andRolloutDeviation.
+Beforealignment,increasingkyieldsonlysmallF1improvements,HitperStepremainslow,and
+RolloutDeviationstayshigh(∼3–4). Thisindicatesthatbroaderretrievalalonedoesnotresolve
+planningissuessuchasmissedormisorderedreasoningsteps.
+AfterapplyingSEARCH-ALIGN,Qwen2.5-VL-7Bshowsconsistentimprovementsacrossallk: F1
+increasesby15–20points,HitperSteprisessubstantially,andRolloutDeviationdecreasestoaround
+1.0.Thesegainsholdforretrieval@1,@3,and@5,andadditionalcandidatesprovidediminishingbut
+stillpositivebenefits. Overall,SEARCH-ALIGNsubstantiallyimprovesbothretrievalaccuracyand
+multi-hopexecution,enablingthemodeltoutilizelargercandidatesetseffectivelywhilemaintaining
+stablereasoningbehavior.
+Table14: PerformanceofQwen2.5-VL-7Band+SEARCH-ALIGNunderRetrieval@1,@3,and@5. We
+reportF1, ∆F1, HitperStep(HPS),andRolloutDeviation(RD).Bestvaluespertopologyandmetricare
+highlightedinboldfont.
+Retrieval@1 Retrieval@3 Retrieval@5
+GraphType Model
+F1 ∆F1 HPS RD F1 ∆F1 HPS RD F1 ∆F1 HPS RD
+Image-Initiated Qwen2.5-VL-7B 26.30 8.65 16.51 4.04 29.21 11.56 16.17 3.79 29.35 11.70 16.95 3.79
+Chain +SEARCH-ALIGN 45.70 28.05 33.59 0.70 47.19 29.54 39.45 0.75 47.29 29.64 41.79 0.79
+Multi-Images Qwen2.5-VL-7B 26.13 7.53 12.58 3.80 30.41 11.81 12.80 3.35 30.38 11.78 14.15 3.23
+Fork +SEARCH-ALIGN 38.01 19.41 41.20 1.16 40.00 21.40 46.82 1.21 39.80 21.20 48.21 1.28
+Parallel Qwen2.5-VL-7B 22.94 14.32 10.09 3.93 26.28 17.66 12.62 3.39 26.41 17.79 15.24 3.26
+Image-TextFork +SEARCH-ALIGN 32.73 24.11 25.07 1.05 33.54 24.92 28.43 1.09 32.77 24.15 30.93 1.18
+Text-Initiated Qwen2.5-VL-7B 31.47 14.34 17.02 3.80 35.54 18.41 18.86 3.20 35.25 18.12 18.83 3.14
+Chain +SEARCH-ALIGN 45.07 27.94 33.59 0.87 46.69 29.56 41.06 0.95 46.73 29.60 42.35 0.93
+27
+
+============================================================
+第 28 页
+============================================================
+PublishedasaconferencepaperatICLR2026
+L AGENTIC MM-RAG CASE STUDY
+L.1 SUCCESSCASE
+Agentic Reasoning
+Agentic Reasoning Golden Reasoning Chain
+Golden Reasoning Chain
+Prediction
+Prediction
+Q: What biblical scene featuring Q: What biblical scene featuring Q: What is the name of the Q: What is the name of the
+Archangel Gabriel is depicted in Archangel Gabriel is depicted in bus operator depicted in the bus operator depicted in the
+the image, where is this painting the image, where is this painting image, its establishment year, image, its establishment year,
+currently held, when and for how currently held, when and for how the start of its mainline the start of its mainline
+much was it acquired for the much was it acquired for the service to San Francisco and service to San Francisco and
+collection, and what historical collection, and what historical what is the city where its what is the city where its
+significance did this acquisition significance did this acquisition headquarters are located? headquarters are located?
+represent for the artist regarding represent for the artist regarding
+American museums? American museums?
+<Thought> The question asks for the name of the <Question> What is the name of the bus operator
+<Thought>Identify the biblical scene featuring <Question> What biblical scene featuring Archangel bus operator, its establishment year, the start of its visible on the vehicle in the image?
+Archangel Gabriel in the image.</Thought> Gabriel is depicted in the image? mainline service……
+<Sub-Question> What biblical scene is depicted in <Sub-Question> What is the name of the bus
+the image featuring Archangel Gabriel?... operator depicted in the image?
+Retrieved golden supporting image……
+Retrieved golden supporting image……
+<Search> Local Image Retrieval with Input <Search> Local Image Retrieval with Input
+Image </Search> Retrieved content omitted.... Image </Search> Retrieved content omitted....
+<Answer> SamTrans.
+<Thought> The image depicts the Annunciation <Answer> The Annunciation. <Thought> The bus operator's name is <Question> In what year was the district for
+scene featuring Archangel Gabriel. <Question> Which museum holds this painting? "SamTrans", as indicated in the retrieved image SamTrans established?
+<Sub-Question> Where is this painting currently caption. Now I need to find information……
+held? <Sub-Question> What is the establishment year
+of SamTrans and when did it start….. Retrieved golden supporting text……
+Retrieved content omitted.... Retrieved golden supporting text……
+<Search>..... No relevant information found....
+<Answer> 1976.
+<Thought>The painting is held by the Philadelphia <Answer> Philadelphia Museum of Art.
+<Question> How many years after its establishment
+Museum of Art. <Question> When and for what price was the <Thought> I need to gather more information about did SamTrans begin mainline bus service to San
+<Sub-Question> When and for how much was this painting acquired for the collection? SamTrans, specifically its establishment year and Francisco?
+painting acquired for the collection?.... the start of its mainline service to San Francisco.
+<Sub-Question> What is the city where SamTrans
+Retrieved content omitted.... Retrieved golden supporting text.... is headquartered? Retrieved golden supporting text....
+<Thought>The painting was acquired on April 5, Retrieved content omitted.... <Answer> One year later.
+1899, for $1,750. <Answer> April 5, 1899 for $1,750. <Question> Where are the headquarters of
+< th S is u a b c -Q qu u i e si s ti t o io n n r > e p W re h s a e t n h t i f s o to r r t i h c e a l a s r i t g is n t if r i e c g a a n r c d e in d g id < th Q is u a e c s q ti u o is n i > tio W n h fo a r t t w h a e s a t r h ti e s t h r i e s g to a r r i d ca in l g s i A g m ni e fic ri a c n a c n e of <Thought> SamTrans is headquartered in San SamTrans located?
+American museums? museums? Carlos, California. However, I still need the
+establishment year and the start of its mainline……
+<Sub-Question> What is the establishment year of
+Retrieved content omitted.... Retrieved golden supporting text.... SamTrans and when did it start its mainline service Retrieved golden supporting text....
+to San Francisco?
+<Thought> The acquisition marked Tanner’s first <Search>..... No relevant information found....
+<Answer> It was Tanner's first work to be <Answer> San Carlos, California.
+work purchased by an American museum.
+purchased by an American museum. <Thought> I have not been able to retrieve the
+establishment year or the start of the mainline <End> Golden Answer: The bus operator is
+<End> Final Answer: The painting depicts the <End> Golden Answer: The painting depicts the service for SamTrans. SamTrans. It was established in 1976 and began
+Annunciation scene featuring Archangel Gabriel, is
+Annunciation scene, is held by the Philadelphia mainline bus service to San Francisco one year
+held by the Philadelphia Museum of Art, was acquired <End> Final Answer: SamTrans is headquartered
+Museum of Art, was acquired on April 5, 1899 for later. Its headquarters are located in San Carlos,
+on April 5, 1899, for $1,750, and represents Henry in San Carlos, California, but I cannot provide its
+Ossawa Tanner’s first work purchased by an American $1,750, and it was Tanner's first work to be establishment year or the start of its mainline service California.
+museum. purchased by an American museum. to San Francisco.
+Figure9: Successcase. Thereasoningchainproducedbytheagentalignedwiththegoldenreasoning
+chainandthefinalanswerincludesallkeyknowledgeentities.
+28
+
+============================================================
+第 29 页
+============================================================
+PublishedasaconferencepaperatICLR2026
+L.2 FAILURECASE
+Agentic Reasoning
+Agentic Reasoning Golden Reasoning Chain
+Golden Reasoning Chain
+Prediction
+Prediction
+Q: What biblical scene featuring Q: What biblical scene featuring Q: What is the name of the Q: What is the name of the
+Archangel Gabriel is depicted in Archangel Gabriel is depicted in bus operator depicted in the bus operator depicted in the
+the image, where is this painting the image, where is this painting image, its establishment year, image, its establishment year,
+currently held, when and for how currently held, when and for how the start of its mainline the start of its mainline
+much was it acquired for the much was it acquired for the service to San Francisco and service to San Francisco and
+collection, and what historical collection, and what historical what is the city where its what is the city where its
+significance did this acquisition significance did this acquisition headquarters are located? headquarters are located?
+represent for the artist regarding represent for the artist regarding
+American museums? American museums?
+<Thought> The question asks for the name of the <Question> What is the name of the bus operator
+<Thought>Identify the biblical scene featuring <Question> What biblical scene featuring Archangel bus operator, its establishment year, the start of its visible on the vehicle in the image?
+Archangel Gabriel in the image.</Thought> Gabriel is depicted in the image? mainline service……
+<Sub-Question> What biblical scene is depicted in <Sub-Question> What is the name of the bus
+the image featuring Archangel Gabriel?... operator depicted in the image?
+Retrieved golden supporting image……
+Retrieved golden supporting image……
+<Search> Local Image Retrieval with Input <Search> Local Image Retrieval with Input
+Image </Search> Retrieved content omitted.... Image </Search> Retrieved content omitted....
+<Answer> SamTrans.
+<Thought> The image depicts the Annunciation <Answer> The Annunciation. <Thought> The bus operator's name is <Question> In what year was the district for
+scene featuring Archangel Gabriel. <Question> Which museum holds this painting? "SamTrans", as indicated in the retrieved image SamTrans established?
+<Sub-Question> Where is this painting currently caption. Now I need to find information……
+held? <Sub-Question> What is the establishment year
+of SamTrans and when did it start….. Retrieved golden supporting text……
+Retrieved content omitted.... Retrieved golden supporting text……
+<Search>..... No relevant information found....
+<Answer> 1976.
+<Thought>The painting is held by the Philadelphia <Answer> Philadelphia Museum of Art.
+<Question> How many years after its establishment
+Museum of Art. <Question> When and for what price was the <Thought> I need to gather more information about did SamTrans begin mainline bus service to San
+<Sub-Question> When and for how much was this painting acquired for the collection? SamTrans, specifically its establishment year and Francisco?
+painting acquired for the collection?.... the start of its mainline service to San Francisco.
+<Sub-Question> What is the city where SamTrans
+Retrieved content omitted.... Retrieved golden supporting text.... is headquartered? Retrieved golden supporting text....
+<Thought>The painting was acquired on April 5, Retrieved content omitted.... <Answer> One year later.
+1899, for $1,750. <Answer> April 5, 1899 for $1,750. <Question> Where are the headquarters of
+< th S is u a b c -Q qu u i e si s ti t o io n n r > e p W re h s a e t n h t i f s o to r r t i h c e a l a s r i t g is n t if r i e c g a a n r c d e in d g id < th Q is u a e c s q ti u o is n i > tio W n h fo a r t t w h a e s a t r h ti e s t h r i e s g to a r r i d ca in l g s i A g m ni e fic ri a c n a c n e of <Thought> SamTrans is headquartered in San SamTrans located?
+American museums? museums? Carlos, California. However, I still need the
+establishment year and the start of its mainline……
+<Sub-Question> What is the establishment year of
+Retrieved content omitted.... Retrieved golden supporting text.... SamTrans and when did it start its mainline service Retrieved golden supporting text....
+to San Francisco?
+<Thought> The acquisition marked Tanner’s first <Search>..... No relevant information found....
+<Answer> It was Tanner's first work to be <Answer> San Carlos, California.
+work purchased by an American museum.
+purchased by an American museum. <Thought> I have not been able to retrieve the
+establishment year or the start of the mainline <End> Golden Answer: The bus operator is
+<End> Final Answer: The painting depicts the <End> Golden Answer: The painting depicts the service for SamTrans. SamTrans. It was established in 1976 and began
+Annunciation scene featuring Archangel Gabriel, is
+Annunciation scene, is held by the Philadelphia mainline bus service to San Francisco one year
+held by the Philadelphia Museum of Art, was acquired <End> Final Answer: SamTrans is headquartered
+Museum of Art, was acquired on April 5, 1899 for later. Its headquarters are located in San Carlos,
+on April 5, 1899, for $1,750, and represents Henry in San Carlos, California, but I cannot provide its
+Ossawa Tanner’s first work purchased by an American $1,750, and it was Tanner's first work to be establishment year or the start of its mainline service California.
+museum. purchased by an American museum. to San Francisco.
+Figure10: Failurecase. Whiletheagentsuccessfullyretrievesthefirstandthelasthopinformation,
+itfailstoretrievethesecondandthirdhopinformation. Thus,thefinalanswerdoesnotincludeall
+keyknowledgeentities.
+29
+
+============================================================
+第 30 页
+============================================================
+PublishedasaconferencepaperatICLR2026
+M THEORETICAL JUSTIFICATION OF TOPOLOGY DESIGNS
+Inthissection,wedemonstratethatthefivereasoningtopologiesdefinedinMC-SEARCHforma
+completecanonicalbasisforthespaceofagenticmultimodalRAGtracesconsideredinthiswork.
+M.1 PROBLEMFORMULATION
+WemodelareasoningtraceasadirectedacyclicgraphG=(V,E)where:
+• Eachnodev representsaretrievalstepathopt.
+t
+• Eachnodeisassignedamodalitym(v )∈{T,I}(TextorImage).
+t
+• ThestructureisconstrainedtobeeitherLinear(asinglepath)orForked(containingexactly
+oneparallelbranchingstepthatmergesintoanaggregator).
+WedefinethesetofvalidtopologiesT byexhaustivelypartitioningthespaceofgraphsbasedon(1)
+InitiationModalityand(2)StructuralComposition.
+M.2 PROOFBYEXHAUSTION
+Case1: LinearStructures(Chains) LetGbealinearchainv →v →···→v . Thetopology
+1 2 n
+isfullydeterminedbythesequenceofmodalities. Wedistinguishthreemutuallyexclusiveregimes:
+1. Image-Anchored: Thechainbeginswithvisualinput(m(v )=I).
+1
+• Definition: Image-InitiatedChain. (Coversalltracesstartingwithanimage).
+2. Text-Anchored(Unimodal): Thechainbeginswithtext(m(v )=T)andcontainsonly
+1
+textnodes(∀t,m(v )=T).
+t
+• Definition: Text-OnlyChain. (Representsthestandardtext-RAGbaseline).
+3. Text-Anchored(Multimodal): Thechainbeginswithtext(m(v ) = T)butcontainsat
+1
+leastonesubsequentimagenode(∃t>1,m(v )=I).
+t
+• Definition: Text-InitiatedChain. (Capturestext-to-visualgrounding).
+Case2: ForkedStructures(Parallelism) LetGcontainaparallelbranchwherenodesv and
+a
+v are retrieved independently. The topology is determined by the multiset of branch modalities
+b
+S ={m(v ),m(v )}.
+branch a b
+1. HeterogeneousBranching: S ={I,T}.
+branch
+• Definition: ParallelImage–TextFork. (Capturessimultaneouscross-modalevidence
+integration).
+2. HomogeneousVisualBranching: S ={I,I}.
+branch
+• Definition: Multi-ImagesFork. (Capturescomparativevisualreasoning).
+RemarkonHomogeneousTextBranching(S ={T,T}) Thefinalmathematicalpossibility
+branch
+is parallel text retrieval. Within the scope of multimodal agentic search, we treat this case as
+structurally reducible to the linear Text-Only Chain. Since modern LLMs process multiple text
+documentsviacontextconcatenation,aparalleltextretrievalstepisfunctionallyequivalenttoasingle
+multi-documentretrievalhop. Therefore,wedonotdefineadistincttopologyfortext-onlybranching,
+preservingtheminimalityofthesetrelativetomultimodaloperations.
+M.3 CONCLUSION
+The five definitions above cover all permutations of initiation modality and distinct multimodal
+branchingstructures. Thus,thesetiscompleteunderourassumptions.
+30
+
+============================================================
+第 31 页
+============================================================
+PublishedasaconferencepaperatICLR2026
+N PROMPT FOR DATA CONSTRUCTION
+Thisappendixprovidesthesystemprompttemplateusedtogeneratemultimodalreasoningchainswith
+GoogleGemini. Theannotatorisinstructedtoconstructcomplex,structurallygroundedmulti-hop
+questionsfollowingoneoffivereasoninggraphtypes: Image-InitiatedChain,ParallelVisual-Textual
+Fork,Text-InitiatedChain,ParallelMulti-ImagesFork,andTextChain. Eachgeneratedchainmust
+explicitly build upon previous answers, remain grounded in the provided images and Wikipedia
+snippets,andoutputinstrictJSONformatwithuniquesupportingevidenceidentifiers.
+Weprovidefivereasoninggraphtemplateswithguidelinesandfew-shotexamplestostandardize
+multimodalquestiongeneration.
+N.1 IMAGE-INITIATEDCHAIN
+Structure Description: Reasoning begins with visual recognition or inference from an image,
+followedbysequentialtext-basedhopsgroundedonthatvisualanchor.
+Guidelines:
+• Beginwithavisualobservationfromtheimage.
+• Usethatentity/factastheanchorforthenextstep.
+• Add1–2textualhopsdependingonthepreviousanswer.
+Example: Question: Wheredidthefootballteam,whoseplayersworered-and-yellowvestsduringa
+2019match,originallyform,andisthatlocationstillpartofthecitytheyareassociatedwithtoday?
+Answer: TheteamwasoriginallyformedinPartick,whichisnowpartofGlasgow. Sub-questions
+andanswers:
+• (Image)Whichteamworered-and-yellowvestsduringa2019soccermatch? →Partick
+ThistleF.C.
+• (Text)WherewasPartickThistleoriginallyformed? →Partick
+• (Text)IsPartickstillindependentfromGlasgow? →No,itisnowpartofGlasgow.
+N.2 PARALLELIMAGE-TEXTFORK
+StructureDescription: Reasoningstartswithasub-questionthatrequiresjointlyleveragingboth
+visualandtextualinformation. Thesesignalsmustbefusedbeforecontinuingviatext.
+Guidelines:
+• Designasub-questionrequiringcombinationofbothimageandtext.
+• Thefusedresultformstheanchorforcontinuedreasoning.
+• Addafollow-uptexthopgroundedinthefirstanswer.
+Example: Question: IsthecurvedarchitectureofthePetersenEventsCenterwell-suitedforitsuse
+asamodernbasketballarenaatPitt? Answer: Yes,thecurvedstructurecomplementsitsroleasa
+largemulti-purposesportsvenue. Sub-questionsandanswers:
+• (Image)DoesthePetersenEventsCenterhaveacurvedarchitecturaldesignsuitablefor
+largegatherings? →Yes,thecentralstructureisroundedandaccommodateslargeinterior
+space.
+• (Text)WhatistheprimaryuseofthePetersenEventsCenteronthePittcampus? →Itisa
+multi-purposearenausedbythePittbasketballteam.
+• (Text)Doesthearchitecturaldesignalignwithitsuseasamodernsportsarena? →Yes,its
+roundedshapesupportsaudiencevisibilityandmodernsportingneeds.
+31
+
+============================================================
+第 32 页
+============================================================
+PublishedasaconferencepaperatICLR2026
+N.3 TEXT-INITIATEDCHAIN
+StructureDescription: Reasoningisinitiatedviatextandendswithimageconfirmation;thefinal
+hopdependsonvisualcontent.
+Guidelines:
+• Startwithasub-questionanswerableviatext.
+• Usethatanswerastheanchorforanothertextualhop.
+• Thefinalstepshouldrelyonvisualconfirmationfromtheimage.
+Example: Question: Is the area in front of the Torre del Reloj enhanced with any water-related
+architecturalfeatures? Answer: Yes,thereisafountainplacedinfrontoftheTorredelReloj,adding
+awater-relatedfeaturetotheplaza. Sub-questionsandanswers:
+• (Text)WhereistheTorredelRelojandwhatlandmarkisit? →Itisahistoricclocktower
+inChiclana’sPlazaMayor.
+• (Image)Isthereanywater-relatedstructureinfrontoftheTorredelReloj?→Yes,afountain
+isclearlyvisible.
+N.4 MULTI-IMAGESFORK
+StructureDescription:Reasoningbeginsbycomparingoraggregatinginformationfromtwoimages,
+thenfollowswithtext-basedinterpretation.
+Guidelines:
+• Compareorverifyasharedvisualpatternacrosstworelatedimages.
+• Usetheirjointinterpretationasthebasisforafollow-uptextualinference.
+Example: Question: WhatvisualmarkerappearsalongbothSalouBoulevardandtheadjacentplaza,
+andwhatdoesitsymbolize? Answer: Bluefootprintsappearinbothplaces,symbolizingahistorical
+walkingroute. Sub-questionsandanswers:
+• (Image)WhatpatternispainteddownthecenterofSalouBoulevard? →Bluefootprints.
+• (Image)Doestheplazaimageshowthesamepattern? →Yes,thesamebluefootprints.
+• (Text)Accordingtolocalguides,whatdobluefootprintsrepresent? →Theymarkahistoric
+promenaderoute.
+N.5 TEXTCHAIN
+StructureDescription: Astandardmulti-hopreasoningchainentirelyovertextualcontent.
+Guidelines:
+• Constructamulti-hopreasoningchainusingonlytext.
+• Eachsub-questionmustdependexplicitlyonthepreviousanswer.
+• Avoidvisualmodalityentirely.
+Example: Question: WhichhistoricalstreetinQuebecCitywasknownforhavingauniquewooden
+pavingmethodintheearly20thcentury? Answer: LittleChamplainStreetwasknownforitsboard
+pavingin1916. Sub-questionsandanswers:
+• (Text)WhatnotablehistoricstreetsexistinOldQuebec? →Saint-VallierEstStreetand
+Petit-Champlain(LittleChamplain).
+• (Text)Whichofthemhadunusualwoodenpavingin1916? →LittleChamplainStreethad
+boardpaving.
+• (Text)WasboardpavingcommonoruniqueforthaterainQuebecCity?→Itwasunique/un-
+common,makingthestreetnotable.
+32
+
+============================================================
+第 33 页
+============================================================
+PublishedasaconferencepaperatICLR2026
+Example: GeneratingMultimodalReasoningChainswithGemini
+InputPrompt:
+Youareamultimodaldataannotationexpert.YouaregivenamultihopmultimodalQAgeneration
+task.
+Youareprovidedwith:
+• 1or2images(embeddedasBase64abovewithcaptionsbelow)
+• SeveralWikipediapassages
+• Anoriginal1-hopsimpleQApairforreference
+Yourtaskistogenerateanew,complex,coherent,andstructurallygroundedmulti-hopquestion
+andreasoningchainthatfollowsthespecifiedreasoninggraphtype.
+ReasoningGraphInformation:
+• GraphType: {graph_type}
+• StructureDescription: {graph_structure_description}
+• StructureInstruction: {graph_structure_instruction}
+• ExpectedReasoningHopCount: 4–5hops
+Guidelines:
+• Thequestionmustalignwiththegivengraphstructure,integratingvisualandtextual
+modalitieswhererequired.
+• Eachsub-questionmustexplicitlybuilduponthepreviousanswer,usingitasananchor
+forthenexthop.
+• Eachsupporting_fact_idmustbeuniqueacrossthechain.
+• Answersmustbedirectlygroundedintheprovidedimagesortextsnippets(nohalluci-
+natedfacts).
+• Thechainmustbecoherentandprogressive,forminganaturalreasoningpath.
+• Thefinalanswershouldlogicallyfollowfromtheentirechain.
+• Eachsub-questionmustspecify:
+– modality: “text”or“image”
+– supporting_fact_id: theIDofthetextsnippetorimage
+– answer: thegroundedanswer
+• OutputmustbeinstrictJSONformat(notMarkdownorfreetext).
+AdditionalContext:
+• Originalquestion(forinspiration): {entry[’Q’]}
+• Originalanswer: {entry[’A’]}
+• Imagecaptions: {captions}
+• Wikipediasnippets: {text_snippets}
+ExpectedOutputFormat:
+{
+"question": "...",
+"answer": "...",
+"image_id": ... , # or "image_ids": [...]
+"graph_type": "{graph_type}",
+"subqa_chain": [
+{
+"subquestion": "...",
+"modality": "text" | "image",
+"supporting_fact_id": "...",
+"answer": "..."
+},
+...
+]
+}
+33
+
+============================================================
+第 34 页
+============================================================
+PublishedasaconferencepaperatICLR2026
+O PROMPT TEMPLATE FOR AGENTIC MM-RAG PIPELINE
+ThisappendixprovidesthefullsystempromptusedforagenticMM-RAGpipeline. Theassistantis
+constrainedtooperatestrictlyonretrievedlocalcontextsfromexternaltextandimageknowledge
+bases,andfollowsastructuredreasoningprotocolconsistingof<Thought>,<Sub-Question>,
+<Search>,and<End>stages. Thisensuresthateverygeneratedanswerisgrounded,step-wise,
+andverifiable.
+GeminiPromptforMultimodalQA
+SystemPrompt:
+You are a helpful multimodal QA assistant that works with an external text knowledge base
+andanexternalimageknowledgebase. Youmustuseonlytheknowledgefromtheexternal
+resourcesprovided. Youmustnotretrievebyyourself. Allanswersmustbegroundedonlyin
+theretrievedlocalcontextthatIgivetoyou.
+Availableretrievalactions:
+• ImageRetrievalwithInputImage
+• TextRetrievalwithaspecificquery
+• ImageRetrievalwithTextQuery
+Protocol:
+• <Thought>Analyzetheoriginalquestionanddecidethenextminimalsub-question
+solvableinonestep.
+• <Sub-Question> Write one sub-question that should be solved in one step (no
+references).
+• <Search>Chooseexactlyoneoftheretrievalactionsabove(or“NoRetrieval”).
+• Repeat<Thought>/<Sub-Question>/<Search>zeroormoretimes.
+• <Thought>Integrateretrievedcontentandreasontothefinalanswer.
+• <End>FinalAnswer: one-sentenceanswertotheoriginalquestion.
+ExtraNotes:
+1. Theuserwillperformtheactualsearchafteryouprovidethequery.
+2. Thelocaltextknowledgebasecontainsshortfactualpassages. Retrievalreturnsatmost
+onepassageeachtime.
+3. Answersmustbegroundedonlyinretrievedcontent.
+4. Ifretrievalisinsufficient,continuewithadditionalsteps.
+5. Keepstepsconcise;donotincludecitationsorURLs.
+6. Donothallucinate;ifnotenoughinformationisretrieved,statethatyoucannotanswer.
+InputFormat: Input Question: {QUESTION}
+34
+
+============================================================
+第 35 页
+============================================================
+PublishedasaconferencepaperatICLR2026
+P PROMPT TEMPLATE FOR LLM-AS-JUDGE
+Thisappendixprovidestheexactsystempromptusedtoevaluatepredictedanswersagainstgolden
+references under an input-only policy. The judge does not assess the truthfulness of the golden
+answer; it scoresthe prediction’s Accuracy, Entity Coverage, Coherence, and Alignment on0–5
+integerscalesfollowingthebanddefinitions. Whenapredictionclaims“insufficientinformation”
+whileagoldenanswerexists,itispenalized. ThejudgeoutputsstrictJSONcontainingonlythefour
+scores,enablingreliableprogrammaticaggregationforlarge-scaleevaluation.
+Example: JudgeSystemPrompt
+InputPrompt:
+Youareastrict,neutraljudge. Comparepred_answertogold_answer(andoptionalsubchains)
+forthegivenquestion. Useonlytheprovidedtext;noexternalknowledge. Donotjudgethe
+truth of the gold answer—only the prediction’s consistency with it. If the prediction claims
+“insufficientinformation”whileagoldanswerexists,penalize. Keeptheoutputterse.
+Inputs:
+• question
+• gold_answer,pred_answer
+• gold_subchain,pred_subchain
+Guidelines(ScoringDimensions0–5):
+• Accuracy: agreementwithgoldonfacts/relations;answersthequestion;nocontradic-
+tions.
+• Entity Coverage: presence and correctness of key entities, values, and relations
+requiredbygold.
+• Coherence: clearstepwisereasoning(ifany);noleapsorconflicts;conclusionfollows
+logically.
+• Alignment: usesonlythegiveninformation;matchesgoldsubchainwhenrelevant;no
+unsupportedadditions.
+ScoreBands: 5=perfect;4=minorissues;3=noticeablegaps;2=majorgapsorweak;1=
+mostlywrong;0=off-topicornone.
+ExpectedOutputFormat:
+{
+"scores": {
+"accuracy": 0,
+"entities": 0,
+"coherence": 0,
+"alignment": 0
+}
+}
+35

@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PPT4: 实验结果分析</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #1e3a5f;
+            --secondary-color: #2d5a87;
+            --accent-color: #4a90c2;
+            --gold-color: #c9a227;
+            --text-color: #333;
+            --light-bg: #f8f9fa;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'SimSun', serif;
+            line-height: 1.8;
+            color: var(--text-color);
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            min-height: 100vh;
+        }
+
+        /* 导航栏 */
+        .navbar {
+            background: rgba(30, 58, 95, 0.95);
+            backdrop-filter: blur(10px);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+        }
+
+        .navbar-logo {
+            color: white;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .navbar-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .navbar-links a {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.3s ease;
+        }
+
+        .navbar-links a:hover {
+            color: var(--gold-color);
+        }
+
+        /* 内容区域 */
+        .content {
+            padding: 100px 2rem 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* PPT幻灯片样式 */
+        .slide {
+            background: white;
+            border-radius: 20px;
+            padding: 4rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 通用幻灯片标题 */
+        .slide-title {
+            font-size: 1.8rem;
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 3px solid var(--gold-color);
+            position: relative;
+        }
+
+        .slide-title::before {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: var(--primary-color);
+        }
+
+        /* 实验设置 */
+        .exp-setup {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .setup-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-top: 4px solid var(--accent-color);
+        }
+
+        .setup-card h4 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .setup-card ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .setup-card li {
+            padding: 0.5rem 0;
+            font-size: 0.9rem;
+            color: #555;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .setup-card li:last-child {
+            border-bottom: none;
+        }
+
+        .setup-card .highlight {
+            color: var(--gold-color);
+            font-weight: 600;
+        }
+
+        /* 结果表格 */
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 2rem;
+            font-size: 0.85rem;
+        }
+
+        .results-table th, .results-table td {
+            padding: 0.8rem;
+            text-align: center;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .results-table th {
+            background: var(--primary-color);
+            color: white;
+            font-weight: 600;
+        }
+
+        .results-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .results-table .best {
+            background: #e8f5e9;
+            font-weight: 600;
+            color: #2e7d32;
+        }
+
+        .results-table .second {
+            background: #fff3e0;
+            font-weight: 600;
+            color: #e65100;
+        }
+
+        /* 性能对比图表 */
+        .chart-container {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 2rem;
+            border-radius: 12px;
+            margin-top: 2rem;
+        }
+
+        .chart-title {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .bar-chart {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            height: 250px;
+            padding: 1rem;
+        }
+
+        .bar {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .bar .bar-fill {
+            width: 50px;
+            background: linear-gradient(180deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            border-radius: 5px 5px 0 0;
+            transition: height 0.5s ease;
+            position: relative;
+        }
+
+        .bar .bar-fill:hover {
+            background: linear-gradient(180deg, var(--gold-color) 0%, var(--accent-color) 100%);
+        }
+
+        .bar .bar-label {
+            font-size: 0.8rem;
+            color: #555;
+            text-align: center;
+            max-width: 70px;
+        }
+
+        .bar .bar-value {
+            font-size: 0.75rem;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        /* SEARCH-ALIGN效果 */
+        .improvement-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .improvement-card {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid #a5d6a7;
+        }
+
+        .improvement-card .model {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .improvement-card .metric {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2e7d32;
+        }
+
+        .improvement-card .metric-label {
+            font-size: 0.85rem;
+            color: #555;
+            margin-top: 0.3rem;
+        }
+
+        /* 关键发现 */
+        .findings-list {
+            margin-top: 2rem;
+        }
+
+        .finding {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 1.2rem;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 10px;
+            border-left: 4px solid var(--gold-color);
+        }
+
+        .finding .icon {
+            font-size: 1.3rem;
+        }
+
+        .finding .content {
+            flex: 1;
+        }
+
+        .finding .content h5 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .finding .content p {
+            font-size: 0.95rem;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        /* 分页导航 */
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2rem 0;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .pagination-btn {
+            background: var(--primary-color);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pagination-btn:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(30, 58, 95, 0.3);
+        }
+
+        .pagination-info {
+            font-size: 0.95rem;
+            color: #666;
+        }
+
+        /* 进度条 */
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #e9ecef;
+            border-radius: 2px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color) 0%, var(--gold-color) 100%);
+            border-radius: 2px;
+            transition: width 0.5s ease;
+            width: 66.67%;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .slide {
+                padding: 2rem 1.5rem;
+            }
+
+            .slide-title {
+                font-size: 1.4rem;
+            }
+
+            .exp-setup {
+                grid-template-columns: 1fr;
+            }
+
+            .results-table {
+                font-size: 0.7rem;
+            }
+
+            .results-table th, .results-table td {
+                padding: 0.5rem 0.3rem;
+            }
+
+            .bar-chart {
+                flex-wrap: wrap;
+                height: auto;
+            }
+
+            .bar {
+                margin-bottom: 1rem;
+            }
+
+            .improvement-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .pagination {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="navbar-logo">MC-SEARCH</div>
+            <div class="navbar-links">
+                <a href="index.html">首页</a>
+                <a href="ppt1.html">PPT1</a>
+                <a href="ppt2.html">PPT2</a>
+                <a href="ppt3.html">PPT3</a>
+                <a href="ppt4.html">PPT4</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 内容区域 -->
+    <div class="content">
+        <!-- 进度条 -->
+        <div class="progress-bar">
+            <div class="progress-fill"></div>
+        </div>
+
+        <!-- 幻灯片1: 实验设置 -->
+        <div class="slide">
+            <h2 class="slide-title">实验设置 (Experimental Setup)</h2>
+            <div class="exp-setup">
+                <div class="setup-card">
+                    <h4>📦 闭源模型</h4>
+                    <ul>
+                        <li>GPT-4o-Mini</li>
+                        <li>Gemini-2.5-Flash</li>
+                        <li>Gemini-2.5-Pro</li>
+                        <li>Claude-3.7-Sonnet</li>
+                    </ul>
+                </div>
+                <div class="setup-card">
+                    <h4>🔧 开源模型</h4>
+                    <ul>
+                        <li>InternVL3.5-8B</li>
+                        <li>Qwen2.5-VL-7B</li>
+                        <li class="highlight">+ SEARCH-ALIGN</li>
+                    </ul>
+                </div>
+                <div class="setup-card">
+                    <h4>📊 评估指标</h4>
+                    <ul>
+                        <li>F1, ∆F1, Golden F1</li>
+                        <li>LLM-as-a-Judge</li>
+                        <li>Hit per Step (HPS)</li>
+                        <li>Rollout Deviation (RD)</li>
+                    </ul>
+                </div>
+                <div class="setup-card">
+                    <h4>⚙️ 实验配置</h4>
+                    <ul>
+                        <li>统一嵌入模型</li>
+                        <li>相同提示模板</li>
+                        <li>相同解码参数</li>
+                        <li>Top-1检索限制</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 幻灯片2: 主要结果概览 -->
+        <div class="slide">
+            <h2 class="slide-title">主要结果 (Main Results)</h2>
+            <div class="chart-container">
+                <div class="chart-title">不同模型在MC-SEARCH基准上的F1性能</div>
+                <div class="bar-chart">
+                    <div class="bar">
+                        <div class="bar-value">47.6</div>
+                        <div class="bar-fill" style="height: 100px;"></div>
+                        <div class="bar-label">Gemini-2.5-Pro</div>
+                    </div>
+                    <div class="bar">
+                        <div class="bar-value">44.1</div>
+                        <div class="bar-fill" style="height: 92.6px;"></div>
+                        <div class="bar-label">Gemini-2.5-Flash</div>
+                    </div>
+                    <div class="bar">
+                        <div class="bar-value">39.1</div>
+                        <div class="bar-fill" style="height: 82.2px;"></div>
+                        <div class="bar-label">InternVL3.5-8B</div>
+                    </div>
+                    <div class="bar">
+                        <div class="bar-value">37.8</div>
+                        <div class="bar-fill" style="height: 79.4px;"></div>
+                        <div class="bar-label">Claude-3.7-Sonnet</div>
+                    </div>
+                    <div class="bar">
+                        <div class="bar-value">36.5</div>
+                        <div class="bar-fill" style="height: 76.7px;"></div>
+                        <div class="bar-label">GPT-4o-Mini</div>
+                    </div>
+                    <div class="bar">
+                        <div class="bar-value">26.3</div>
+                        <div class="bar-fill" style="height: 55.2px;"></div>
+                        <div class="bar-label">Qwen2.5-VL-7B</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 幻灯片3: SEARCH-ALIGN效果 -->
+        <div class="slide">
+            <h2 class="slide-title">SEARCH-ALIGN提升效果</h2>
+            <p style="font-size: 1rem; color: #555; margin-bottom: 1.5rem;">
+                SEARCH-ALIGN对开源模型的性能提升效果显著，特别是在HPS指标上。
+            </p>
+            <div class="improvement-grid">
+                <div class="improvement-card">
+                    <div class="model">InternVL3.5-8B</div>
+                    <div class="metric">+2.8</div>
+                    <div class="metric-label">F1提升</div>
+                </div>
+                <div class="improvement-card">
+                    <div class="model">InternVL3.5-8B</div>
+                    <div class="metric">+12.0</div>
+                    <div class="metric-label">HPS提升</div>
+                </div>
+                <div class="improvement-card">
+                    <div class="model">Qwen2.5-VL-7B</div>
+                    <div class="metric">+13.7</div>
+                    <div class="metric-label">F1提升</div>
+                </div>
+                <div class="improvement-card">
+                    <div class="model">Qwen2.5-VL-7B</div>
+                    <div class="metric">+16.0</div>
+                    <div class="metric-label">HPS提升</div>
+                </div>
+            </div>
+            <div class="findings-list">
+                <div class="finding">
+                    <div class="icon">💡</div>
+                    <div class="content">
+                        <h5>关键发现</h5>
+                        <p>经过SEARCH-ALIGN微调后，Qwen2.5-VL-7B在文本中心链上的性能接近Gemini-2.5-Pro，表明过程级监督能够有效弥补开源模型在检索规划方面的不足。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 幻灯片4: 不同推理拓扑的性能 -->
+        <div class="slide">
+            <h2 class="slide-title">不同推理拓扑的性能对比</h2>
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th>推理拓扑</th>
+                        <th>Gemini-2.5-Pro</th>
+                        <th>Gemini-2.5-Flash</th>
+                        <th>InternVL3.5-8B</th>
+                        <th>Claude-3.7-Sonnet</th>
+                        <th>GPT-4o-Mini</th>
+                        <th>Qwen2.5-VL-7B</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Image-Initiated Chain</td>
+                        <td class="best">47.61</td>
+                        <td class="second">44.10</td>
+                        <td>39.11</td>
+                        <td>37.80</td>
+                        <td>36.49</td>
+                        <td>26.30</td>
+                    </tr>
+                    <tr>
+                        <td>Text-Initiated Chain</td>
+                        <td class="best">45.30</td>
+                        <td class="second">43.55</td>
+                        <td>38.34</td>
+                        <td>36.10</td>
+                        <td>30.11</td>
+                        <td>31.47</td>
+                    </tr>
+                    <tr>
+                        <td>Text-Only Chain</td>
+                        <td class="best">34.47</td>
+                        <td class="second">34.03</td>
+                        <td>34.82</td>
+                        <td>27.37</td>
+                        <td>30.96</td>
+                        <td>23.54</td>
+                    </tr>
+                    <tr>
+                        <td>Multi-Images Fork</td>
+                        <td class="best">40.37</td>
+                        <td class="second">36.80</td>
+                        <td>33.08</td>
+                        <td>29.78</td>
+                        <td>24.00</td>
+                        <td>26.13</td>
+                    </tr>
+                    <tr>
+                        <td>Parallel Image-Text</td>
+                        <td class="best">34.83</td>
+                        <td class="second">29.92</td>
+                        <td>29.74</td>
+                        <td>26.43</td>
+                        <td>21.98</td>
+                        <td>22.94</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 幻灯片5: 关键发现总结 -->
+        <div class="slide">
+            <h2 class="slide-title">关键发现总结</h2>
+            <div class="findings-list">
+                <div class="finding">
+                    <div class="icon">🥇</div>
+                    <div class="content">
+                        <h5>闭源模型表现更优</h5>
+                        <p>Gemini-2.5-Pro在所有推理拓扑上表现最佳，其次是Gemini-2.5-Flash，表明专有模型在多模态推理方面仍具有显著优势。</p>
+                    </div>
+                </div>
+                <div class="finding">
+                    <div class="icon">📈</div>
+                    <div class="content">
+                        <h5>SEARCH-ALIGN有效提升</h5>
+                        <p>过程级监督微调能够显著提升开源模型的规划和检索能力，缩小与闭源模型的差距。</p>
+                    </div>
+                </div>
+                <div class="finding">
+                    <div class="icon">⚡</div>
+                    <div class="content">
+                        <h5>Parallel Image-Text最具挑战性</h5>
+                        <p>所有模型在并行图像-文本分叉结构上表现最差，需要同时规划和覆盖两个分支。</p>
+                    </div>
+                </div>
+                <div class="finding">
+                    <div class="icon">🔍</div>
+                    <div class="content">
+                        <h5>检索规划是主要瓶颈</h5>
+                        <p>开源模型的主要弱点在于检索规划和步骤级推理对齐，而非基本感知或语义理解。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 分页导航 -->
+    <div class="pagination">
+        <a href="ppt3.html" class="pagination-btn">
+            <span>←</span>
+            <span>上一页</span>
+        </a>
+        <span class="pagination-info">PPT 4/6 - 实验结果分析</span>
+        <a href="ppt5.html" class="pagination-btn">
+            <span>下一页</span>
+            <span>→</span>
+        </a>
+    </div>
+</body>
+</html>
