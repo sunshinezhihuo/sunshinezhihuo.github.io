@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PPT1: 论文概述 - MC-SEARCH</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #1e3a5f;
+            --secondary-color: #2d5a87;
+            --accent-color: #4a90c2;
+            --gold-color: #c9a227;
+            --text-color: #333;
+            --light-bg: #f8f9fa;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'SimSun', serif;
+            line-height: 1.8;
+            color: var(--text-color);
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            min-height: 100vh;
+        }
+
+        /* 导航栏 */
+        .navbar {
+            background: rgba(30, 58, 95, 0.95);
+            backdrop-filter: blur(10px);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+        }
+
+        .navbar-logo {
+            color: white;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .navbar-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .navbar-links a {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.3s ease;
+        }
+
+        .navbar-links a:hover {
+            color: var(--gold-color);
+        }
+
+        /* 内容区域 */
+        .content {
+            padding: 100px 2rem 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* PPT幻灯片样式 */
+        .slide {
+            background: white;
+            border-radius: 20px;
+            padding: 4rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 标题页 */
+        .title-slide {
+            text-align: center;
+            padding: 6rem 4rem;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+        }
+
+        .title-slide h1 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            line-height: 1.4;
+            animation: slideInTop 0.8s ease-out;
+        }
+
+        .title-slide .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 2.5rem;
+            animation: slideInTop 0.8s ease-out 0.2s both;
+        }
+
+        .title-slide .authors {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            animation: slideInTop 0.8s ease-out 0.4s both;
+        }
+
+        .title-slide .affiliations {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 3rem;
+            animation: slideInTop 0.8s ease-out 0.6s both;
+        }
+
+        .title-slide .venue {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            animation: slideInTop 0.8s ease-out 0.8s both;
+        }
+
+        @keyframes slideInTop {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 通用幻灯片标题 */
+        .slide-title {
+            font-size: 1.8rem;
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 3px solid var(--gold-color);
+            position: relative;
+        }
+
+        .slide-title::before {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: var(--primary-color);
+        }
+
+        /* 摘要内容 */
+        .abstract-content {
+            font-size: 1.1rem;
+            line-height: 2;
+            color: #444;
+            text-align: justify;
+        }
+
+        .abstract-content strong {
+            color: var(--primary-color);
+        }
+
+        /* 研究背景 */
+        .background-content {
+            font-size: 1.05rem;
+            line-height: 2;
+            color: #444;
+        }
+
+        .background-content h3 {
+            color: var(--primary-color);
+            margin: 1.5rem 0 1rem;
+            font-size: 1.2rem;
+        }
+
+        .background-content ul {
+            margin-left: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .background-content li {
+            margin-bottom: 0.8rem;
+            position: relative;
+            padding-left: 1rem;
+        }
+
+        .background-content li::before {
+            content: '▶';
+            position: absolute;
+            left: 0;
+            color: var(--gold-color);
+        }
+
+        /* 挑战区域 */
+        .challenges-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .challenge-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 1.5rem;
+            border-radius: 10px;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .challenge-card h4 {
+            color: var(--primary-color);
+            margin-bottom: 0.8rem;
+            font-size: 1.1rem;
+        }
+
+        .challenge-card p {
+            font-size: 0.95rem;
+            color: #555;
+            line-height: 1.7;
+        }
+
+        /* 分页导航 */
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2rem 0;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .pagination-btn {
+            background: var(--primary-color);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pagination-btn:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(30, 58, 95, 0.3);
+        }
+
+        .pagination-btn:disabled,
+        .pagination-btn.disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .pagination-info {
+            font-size: 0.95rem;
+            color: #666;
+        }
+
+        /* 进度条 */
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #e9ecef;
+            border-radius: 2px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color) 0%, var(--gold-color) 100%);
+            border-radius: 2px;
+            transition: width 0.5s ease;
+            width: 16.67%;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .slide {
+                padding: 2rem 1.5rem;
+            }
+
+            .title-slide h1 {
+                font-size: 1.6rem;
+            }
+
+            .title-slide {
+                padding: 4rem 2rem;
+            }
+
+            .slide-title {
+                font-size: 1.4rem;
+            }
+
+            .abstract-content, .background-content {
+                font-size: 0.95rem;
+            }
+
+            .pagination {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="navbar-logo">MC-SEARCH</div>
+            <div class="navbar-links">
+                <a href="index.html">首页</a>
+                <a href="ppt1.html">PPT1</a>
+                <a href="ppt2.html">PPT2</a>
+                <a href="ppt3.html">PPT3</a>
+                <a href="ppt4.html">PPT4</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 内容区域 -->
+    <div class="content">
+        <!-- 进度条 -->
+        <div class="progress-bar">
+            <div class="progress-fill"></div>
+        </div>
+
+        <!-- 幻灯片1: 标题页 -->
+        <div class="slide title-slide">
+            <h1>MC-SEARCH</h1>
+            <p class="subtitle">EVALUATING AND ENHANCING MULTI-MODAL AGENTIC SEARCH WITH STRUCTURED LONG REASONING CHAINS</p>
+            <p class="authors">Xuying Ning*, Dongqi Fu*, Tianxin Wei*, Mengting Ai, Jiaru Zou, Ting-Wei Li, Hanghang Tong, Yada Zhu, Hendrik Hamann, Jingrui He†</p>
+            <p class="affiliations">UIUC, Meta, IBM Research, Stony Brook University</p>
+            <span class="venue">Published as a conference paper at ICLR 2026</span>
+        </div>
+
+        <!-- 幻灯片2: 摘要 -->
+        <div class="slide">
+            <h2 class="slide-title">摘要 (Abstract)</h2>
+            <div class="abstract-content">
+                <p>随着对逐步、跨模态和知识基础推理需求的不断增长，多模态大语言模型(MLLMs)正在超越传统的固定"检索-生成"范式，向更复杂的智能体多模态检索增强生成(MM-RAG)发展。然而，现有的基准测试主要关注简化的问答任务和短检索链，对自适应规划和多模态推理的探索不足。</p>
+                <p style="margin-top: 1rem;">本文提出<strong>MC-SEARCH</strong>，这是第一个针对智能体MM-RAG的基准测试，包含跨越五种代表性推理结构的长步骤标注推理链。每个示例指定了子问题、检索模态、支持事实和中间答案，并通过<strong>HAVE</strong>(Hop-wise Attribution and Verification of Evidence)确保真实性，最终生成3,333个高质量示例，平均包含3.7个推理步骤。</p>
+                <p style="margin-top: 1rem;">除了答案准确率，MC-SEARCH引入了新的过程级指标来评估推理质量、逐步检索和规划准确性。通过开发统一的智能体MM-RAG管道，本文对六种领先的MLLMs进行了基准测试，揭示了过度检索、检索不足和模态错位规划等系统性问题。最后，本文引入<strong>SEARCH-ALIGN</strong>，一个利用验证推理链的过程监督微调框架，证明所提出的数据不仅能够实现忠实评估，还能提高开源MLLMs的规划和检索准确性。</p>
+            </div>
+        </div>
+
+        <!-- 幻灯片3: 研究背景 -->
+        <div class="slide">
+            <h2 class="slide-title">研究背景 (Background)</h2>
+            <div class="background-content">
+                <h3>1. 多模态大语言模型的发展</h3>
+                <p>多模态大语言模型(MLLMs)在推理能力方面取得了快速进展，超越了纯文本输入，能够处理交错的跨模态上下文。为确保事实性和鲁棒性，检索增强生成(RAG)已成为将模型输出基于外部文本证据的关键范式。</p>
+                
+                <h3>2. 多模态RAG的兴起</h3>
+                <p>多模态RAG(MM-RAG)为MLLMs配备了视觉搜索能力，将知识基础从纯文本证据扩展到多模态上下文，从而促进知识密集型查询的跨模态推理。</p>
+                
+                <h3>3. 现有基准的局限性</h3>
+                <ul>
+                    <li>大多数采用简单的问答格式，使用固定的"检索-生成"管道</li>
+                    <li>将多模态证据压缩到主要文本通道</li>
+                    <li>限制在1-2步检索，缺乏长的自适应推理轨迹</li>
+                    <li>缺乏逐步标注和明确的推理拓扑结构</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 幻灯片4: 研究挑战 -->
+        <div class="slide">
+            <h2 class="slide-title">主要挑战 (Key Challenges)</h2>
+            <div class="challenges-grid">
+                <div class="challenge-card">
+                    <h4>🔍 长链推理</h4>
+                    <p>现有模型在处理长推理链时表现下降，错误会逐步累积，影响最终答案质量。</p>
+                </div>
+                <div class="challenge-card">
+                    <h4>🎯 模态对齐</h4>
+                    <p>模型难以在不同模态之间进行有效切换和协调，经常出现模态错位规划错误。</p>
+                </div>
+                <div class="challenge-card">
+                    <h4>📊 过程评估</h4>
+                    <p>传统的答案级评估无法捕捉推理过程中的细微差异，需要更细粒度的评估指标。</p>
+                </div>
+                <div class="challenge-card">
+                    <h4>✅ 证据验证</h4>
+                    <p>推理链中存在幻觉步骤和冗余步骤，需要有效的机制来验证每一步的必要性。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 幻灯片5: 研究贡献 -->
+        <div class="slide">
+            <h2 class="slide-title">主要贡献 (Main Contributions)</h2>
+            <div class="background-content">
+                <ul>
+                    <li><strong>基准测试(Benchmark):</strong> 提出MC-SEARCH，第一个针对智能体多模态RAG的基准测试，包含跨越五种代表性结构的长步骤标注推理链，通过HAVE程序验证必要性和非冗余性。</li>
+                    <li><strong>评估指标(Metrics):</strong> 提出新的过程级指标，超越答案准确率，精确评估推理质量、逐步检索和规划准确性。</li>
+                    <li><strong>模型评估(Evaluation):</strong> 开发统一的智能体MM-RAG管道，对六种领先的MLLMs进行广泛基准测试，揭示过度检索、检索不足、模态错位规划和八种特征错误类型。</li>
+                    <li><strong>改进方法(Method):</strong> 引入SEARCH-ALIGN，利用验证推理链对MLLMs进行过程监督微调，证明数据对训练的有效性。</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- 分页导航 -->
+    <div class="pagination">
+        <a href="index.html" class="pagination-btn">
+            <span>←</span>
+            <span>返回首页</span>
+        </a>
+        <span class="pagination-info">PPT 1/6 - 论文概述</span>
+        <a href="ppt2.html" class="pagination-btn">
+            <span>下一页</span>
+            <span>→</span>
+        </a>
+    </div>
+</body>
+</html>
